@@ -27,7 +27,7 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 
-String ruta = "mibase.db";
+string ruta = "mibase.db";
 using var conexion = new SqliteConnection($"DataSource={ruta}");
 conexion.Open();
 var comando = conexion.CreateCommand();

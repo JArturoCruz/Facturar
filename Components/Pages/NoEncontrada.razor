@@ -1,5 +1,4 @@
-﻿@page "/{**catchall}"
-@inject NavigationManager Navigation
+﻿@inject NavigationManager Navigation
 
 <PageTitle>Página no encontrada</PageTitle>
 
@@ -8,7 +7,7 @@
     <p>La dirección URL a la que intentas acceder no existe o es incorrecta.</p>
     <hr>
     <p class="mb-0">
-        Serás redirigido a la lista de facturas en 3 segundos...
+        Serás redirigido a la página principal en 3 segundos...
     </p>
 </div>
 
@@ -16,7 +15,6 @@
     protected override async Task OnInitializedAsync()
     {
         await Task.Delay(3000);
-
-        Navigation.NavigateTo("/facturas");
+        Navigation.NavigateTo("/404", forceLoad: true); // forceLoad para que recargue si es necesario
     }
 }
