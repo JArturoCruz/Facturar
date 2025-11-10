@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System; 
+using System;
 
 namespace Facturar.Components.Servicio
 {
@@ -16,7 +16,6 @@ namespace Facturar.Components.Servicio
         {
             _servicioFactura = servicioFacturacion;
         }
-
 
         public async Task CargarDraftItemAsync()
         {
@@ -36,7 +35,7 @@ namespace Facturar.Components.Servicio
 
         public async Task GuardarCambiosDraftItemAsync()
         {
-            if (DraftItem.Identificador == 0) 
+            if (DraftItem.Identificador == 0)
             {
                 var itemsActuales = await _servicioFactura.ObtenerItems();
                 var itemExistente = itemsActuales.FirstOrDefault(i =>
@@ -46,7 +45,6 @@ namespace Facturar.Components.Servicio
                 {
                     itemExistente.Cantidad += DraftItem.Cantidad;
                     itemExistente.PrecioUnitario = DraftItem.PrecioUnitario;
-
                     await _servicioFactura.ActualizarItem(itemExistente);
                 }
                 else
@@ -97,7 +95,6 @@ namespace Facturar.Components.Servicio
             return items.Any() ? items.Max(i => i.Identificador) + 1 : 1;
         }
 
-
         public async Task GuardarFacturaActualAsync(string nombreFactura, List<FacturaItem> itemsDraft)
         {
             if (string.IsNullOrWhiteSpace(nombreFactura))
@@ -125,6 +122,11 @@ namespace Facturar.Components.Servicio
         public async Task RecargarFacturaEnBorradorAsync(int facturaID)
         {
             await _servicioFactura.RecargarFacturaEnBorradorAsync(facturaID);
+        }
+
+        public async Task EliminarFacturaGuardadaAsync(int facturaID)
+        {
+            await _servicioFactura.EliminarFacturaGuardadaAsync(facturaID);
         }
     }
 }

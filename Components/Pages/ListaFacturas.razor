@@ -4,7 +4,8 @@
 @rendermode InteractiveServer
 @inject ControladorFacturacion Controlador
 @inject NavigationManager Navigation
-@inject IJSRuntime JSRuntime 
+@inject IJSRuntime JSRuntime
+
 <PageTitle>Facturas Guardadas</PageTitle>
 
 <h1>Facturas Guardadas</h1>
@@ -25,7 +26,8 @@ else
                 <th>Nombre</th>
                 <th>Fecha de Creación</th>
                 <th>Total</th>
-                <th>Acciones</th> </tr>
+                <th>Acciones</th>
+            </tr>
         </thead>
         <tbody>
             @foreach (var f in facturas)
@@ -42,8 +44,11 @@ else
                             <button class="btn btn-warning btn-sm" @onclick="() => RecargarFactura(f)">
                                 Modificar
                             </button>
+                            <button class="btn btn-danger btn-sm" @onclick="() => EliminarFactura(f)">
+                                🗑️
+                            </button>
                         </div>
-                        </td>
+                    </td>
                 </tr>
             }
         </tbody>
@@ -64,11 +69,24 @@ else
     {
         var mensaje = $"¿Estás seguro de que quieres modificar la factura '{factura.NombreFactura}'?\n\n¡CUIDADO! Esto reemplazará tu factura actual en el borrador.";
         bool confirmado = await JSRuntime.InvokeAsync<bool>("confirm", mensaje);
-        
+
         if (confirmado)
         {
             await Controlador.RecargarFacturaEnBorradorAsync(factura.FacturaID);
             Navigation.NavigateTo("/facturador");
+        }
+    }
+
+    private async Task EliminarFactura(Factura factura)
+    {
+        var mensaje = $"¿Estás seguro de que quieres ELIMINAR PERMANENTEMENTE la factura '{factura.NombreFactura}'?\n\nEsta acción no se puede deshacer.";
+        bool confirmado = await JSRuntime.InvokeAsync<bool>("confirm", mensaje);
+
+        if (confirmado)
+        {
+            await Controlador.EliminarFacturaGuardadaAsync(factura.FacturaID);
+            facturas.Remove(factura);
+            StateHasChanged();
         }
     }
 }

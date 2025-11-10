@@ -287,5 +287,34 @@ namespace Facturar.Components.Data
                 throw;
             }
         }
+
+        public async Task EliminarFacturaGuardadaAsync(int facturaID)
+        {
+            using var conexion = new SqliteConnection($"Datasource={ruta}");
+            await conexion.OpenAsync();
+            using var transaccion = conexion.BeginTransaction();
+
+            try
+            {
+                var cmdItems = conexion.CreateCommand();
+                cmdItems.Transaction = transaccion;
+                cmdItems.CommandText = "DELETE FROM FacturaItemHistorico WHERE FacturaID = @ID";
+                cmdItems.Parameters.AddWithValue("@ID", facturaID);
+                await cmdItems.ExecuteNonQueryAsync();
+
+                var cmdFactura = conexion.CreateCommand();
+                cmdFactura.Transaction = transaccion;
+                cmdFactura.CommandText = "DELETE FROM Factura WHERE FacturaID = @ID";
+                cmdFactura.Parameters.AddWithValue("@ID", facturaID);
+                await cmdFactura.ExecuteNonQueryAsync();
+
+                await transaccion.CommitAsync();
+            }
+            catch
+            {
+                await transaccion.RollbackAsync();
+                throw;
+            }
+        }
     }
 }

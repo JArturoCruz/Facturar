@@ -4,7 +4,8 @@
 @rendermode InteractiveServer
 @inject ControladorFacturacion Controlador
 @inject NavigationManager Navigation
-@inject IJSRuntime JSRuntime 
+@inject IJSRuntime JSRuntime
+
 <PageTitle>Detalle de Factura</PageTitle>
 
 @if (factura == null)
@@ -18,6 +19,9 @@ else
         <div>
             <button class="btn btn-warning me-2" @onclick="() => RecargarFactura(factura)">
                 Modificar esta Factura
+            </button>
+            <button class="btn btn-danger me-2" @onclick="() => EliminarFactura(factura)">
+                Eliminar
             </button>
             <a href="/facturas" class="btn btn-secondary">Volver a la lista</a>
         </div>
@@ -78,7 +82,7 @@ else
         factura = await Controlador.ObtenerDetalleFacturaAsync(FacturaID);
         if (factura == null)
         {
-            Navigation.NavigateTo("/facturas"); 
+            Navigation.NavigateTo("/facturas");
         }
     }
 
@@ -86,11 +90,23 @@ else
     {
         var mensaje = $"¿Estás seguro de que quieres modificar la factura '{factura.NombreFactura}'?\n\n¡CUIDADO! Esto reemplazará tu factura actual en el borrador.";
         bool confirmado = await JSRuntime.InvokeAsync<bool>("confirm", mensaje);
-        
+
         if (confirmado)
         {
             await Controlador.RecargarFacturaEnBorradorAsync(factura.FacturaID);
-            Navigation.NavigateTo("/facturador"); 
+            Navigation.NavigateTo("/facturador");
+        }
+    }
+
+    private async Task EliminarFactura(Factura factura)
+    {
+        var mensaje = $"¿Estás seguro de que quieres ELIMINAR PERMANENTEMENTE la factura '{factura.NombreFactura}'?\n\nEsta acción no se puede deshacer.";
+        bool confirmado = await JSRuntime.InvokeAsync<bool>("confirm", mensaje);
+
+        if (confirmado)
+        {
+            await Controlador.EliminarFacturaGuardadaAsync(factura.FacturaID);
+            Navigation.NavigateTo("/facturas");
         }
     }
 }
