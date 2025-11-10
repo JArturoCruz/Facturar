@@ -4,7 +4,7 @@
 @rendermode InteractiveServer
 @inject ControladorFacturacion Controlador
 @inject NavigationManager Navigation
-
+@inject IJSRuntime JSRuntime 
 <PageTitle>Facturas Guardadas</PageTitle>
 
 <h1>Facturas Guardadas</h1>
@@ -25,8 +25,7 @@ else
                 <th>Nombre</th>
                 <th>Fecha de Creación</th>
                 <th>Total</th>
-                <th>Acción</th>
-            </tr>
+                <th>Acciones</th> </tr>
         </thead>
         <tbody>
             @foreach (var f in facturas)
@@ -36,10 +35,15 @@ else
                     <td>@f.FechaCreacion.ToLocalTime().ToString("g")</td>
                     <td>@f.Total.ToString("C")</td>
                     <td>
-                        <a href="/factura/@f.FacturaID" class="btn btn-primary btn-sm">
-                            Ver Detalles
-                        </a>
-                    </td>
+                        <div class="btn-group" role="group">
+                            <a href="/factura/@f.FacturaID" class="btn btn-primary btn-sm">
+                                Ver
+                            </a>
+                            <button class="btn btn-warning btn-sm" @onclick="() => RecargarFactura(f)">
+                                Modificar
+                            </button>
+                        </div>
+                        </td>
                 </tr>
             }
         </tbody>
@@ -54,5 +58,17 @@ else
     protected override async Task OnInitializedAsync()
     {
         facturas = await Controlador.ObtenerFacturasGuardadasAsync();
+    }
+
+    private async Task RecargarFactura(Factura factura)
+    {
+        var mensaje = $"¿Estás seguro de que quieres modificar la factura '{factura.NombreFactura}'?\n\n¡CUIDADO! Esto reemplazará tu factura actual en el borrador.";
+        bool confirmado = await JSRuntime.InvokeAsync<bool>("confirm", mensaje);
+        
+        if (confirmado)
+        {
+            await Controlador.RecargarFacturaEnBorradorAsync(factura.FacturaID);
+            Navigation.NavigateTo("/facturador");
+        }
     }
 }

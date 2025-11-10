@@ -4,18 +4,23 @@
 @rendermode InteractiveServer
 @inject ControladorFacturacion Controlador
 @inject NavigationManager Navigation
-
+@inject IJSRuntime JSRuntime 
 <PageTitle>Detalle de Factura</PageTitle>
 
 @if (factura == null)
 {
-   
+    <p><em>Cargando detalle...</em></p>
 }
 else
 {
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1>Factura: @factura.NombreFactura</h1>
-        <a href="/facturas" class="btn btn-secondary">Volver a la lista</a>
+        <div>
+            <button class="btn btn-warning me-2" @onclick="() => RecargarFactura(factura)">
+                Modificar esta Factura
+            </button>
+            <a href="/facturas" class="btn btn-secondary">Volver a la lista</a>
+        </div>
     </div>
 
     <div class="card shadow-sm">
@@ -74,6 +79,18 @@ else
         if (factura == null)
         {
             Navigation.NavigateTo("/facturas"); 
+        }
+    }
+
+    private async Task RecargarFactura(Factura factura)
+    {
+        var mensaje = $"¿Estás seguro de que quieres modificar la factura '{factura.NombreFactura}'?\n\n¡CUIDADO! Esto reemplazará tu factura actual en el borrador.";
+        bool confirmado = await JSRuntime.InvokeAsync<bool>("confirm", mensaje);
+        
+        if (confirmado)
+        {
+            await Controlador.RecargarFacturaEnBorradorAsync(factura.FacturaID);
+            Navigation.NavigateTo("/facturador"); 
         }
     }
 }

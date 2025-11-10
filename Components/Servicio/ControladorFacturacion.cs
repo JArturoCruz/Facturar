@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System; 
 
 namespace Facturar.Components.Servicio
 {
@@ -15,6 +16,7 @@ namespace Facturar.Components.Servicio
         {
             _servicioFactura = servicioFacturacion;
         }
+
 
         public async Task CargarDraftItemAsync()
         {
@@ -34,15 +36,30 @@ namespace Facturar.Components.Servicio
 
         public async Task GuardarCambiosDraftItemAsync()
         {
-            if (DraftItem.Identificador == 0)
+            if (DraftItem.Identificador == 0) 
             {
-                DraftItem.Identificador = await GenerarNuevoID();
-                await _servicioFactura.AgregarItem(DraftItem);
+                var itemsActuales = await _servicioFactura.ObtenerItems();
+                var itemExistente = itemsActuales.FirstOrDefault(i =>
+                    i.Producto.Equals(DraftItem.Producto, StringComparison.OrdinalIgnoreCase));
+
+                if (itemExistente != null)
+                {
+                    itemExistente.Cantidad += DraftItem.Cantidad;
+                    itemExistente.PrecioUnitario = DraftItem.PrecioUnitario;
+
+                    await _servicioFactura.ActualizarItem(itemExistente);
+                }
+                else
+                {
+                    DraftItem.Identificador = await GenerarNuevoID();
+                    await _servicioFactura.AgregarItem(DraftItem);
+                }
             }
             else
             {
                 await _servicioFactura.ActualizarItem(DraftItem);
             }
+
             DraftItem = new FacturaItem { Cantidad = 1, PrecioUnitario = 0.01m };
             await GuardarDraftItemAsync();
         }
@@ -80,6 +97,7 @@ namespace Facturar.Components.Servicio
             return items.Any() ? items.Max(i => i.Identificador) + 1 : 1;
         }
 
+
         public async Task GuardarFacturaActualAsync(string nombreFactura, List<FacturaItem> itemsDraft)
         {
             if (string.IsNullOrWhiteSpace(nombreFactura))
@@ -102,6 +120,11 @@ namespace Facturar.Components.Servicio
         public async Task<Factura> ObtenerDetalleFacturaAsync(int facturaID)
         {
             return await _servicioFactura.ObtenerDetalleFacturaAsync(facturaID);
+        }
+
+        public async Task RecargarFacturaEnBorradorAsync(int facturaID)
+        {
+            await _servicioFactura.RecargarFacturaEnBorradorAsync(facturaID);
         }
     }
 }

@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Globalization; 
+using System.Globalization;
 
-namespace Facturar.Components.Data 
+namespace Facturar.Components.Data
 {
     public class ServicioFactura
     {
@@ -105,12 +105,22 @@ namespace Facturar.Components.Data
             using var conexion = new SqliteConnection($"Datasource={ruta}");
             await conexion.OpenAsync();
 
+            var cmdValidar = conexion.CreateCommand();
+            cmdValidar.CommandText = "SELECT 1 FROM Factura WHERE NombreFactura = @NOMBRE LIMIT 1";
+            cmdValidar.Parameters.AddWithValue("@NOMBRE", nombreFactura);
+
+            var existe = await cmdValidar.ExecuteScalarAsync();
+            if (existe != null)
+            {
+                throw new System.Exception("Error: Ya existe una factura con ese nombre. Por favor, elige otro.");
+            }
+
             using var transaccion = conexion.BeginTransaction();
-            
+
             try
             {
                 var total = itemsDraft.Sum(i => i.Subtotal);
-                var fecha = DateTime.UtcNow.ToString("o"); 
+                var fecha = DateTime.UtcNow.ToString("o");
 
                 var cmdFactura = conexion.CreateCommand();
                 cmdFactura.Transaction = transaccion;
@@ -122,7 +132,7 @@ namespace Facturar.Components.Data
                 cmdFactura.Parameters.AddWithValue("@NOMBRE", nombreFactura);
                 cmdFactura.Parameters.AddWithValue("@FECHA", fecha);
                 cmdFactura.Parameters.AddWithValue("@TOTAL", total);
-                
+
                 long nuevoFacturaID = (long)await cmdFactura.ExecuteScalarAsync();
 
                 foreach (var item in itemsDraft)
@@ -150,7 +160,7 @@ namespace Facturar.Components.Data
             catch
             {
                 await transaccion.RollbackAsync();
-                throw; 
+                throw;
             }
         }
 
@@ -161,7 +171,7 @@ namespace Facturar.Components.Data
             await conexion.OpenAsync();
             var comando = conexion.CreateCommand();
             comando.CommandText = "SELECT FacturaID, NombreFactura, FechaCreacion, Total FROM Factura ORDER BY FechaCreacion DESC";
-            
+
             using var lector = await comando.ExecuteReaderAsync();
             while (await lector.ReadAsync())
             {
@@ -181,11 +191,11 @@ namespace Facturar.Components.Data
             Factura factura = null;
             using var conexion = new SqliteConnection($"Datasource={ruta}");
             await conexion.OpenAsync();
-            
+
             var cmdFactura = conexion.CreateCommand();
             cmdFactura.CommandText = "SELECT FacturaID, NombreFactura, FechaCreacion, Total FROM Factura WHERE FacturaID = @ID";
             cmdFactura.Parameters.AddWithValue("@ID", facturaID);
-            
+
             using (var lectorF = await cmdFactura.ExecuteReaderAsync())
             {
                 if (await lectorF.ReadAsync())
@@ -200,12 +210,12 @@ namespace Facturar.Components.Data
                 }
             }
 
-            if (factura == null) return null; 
+            if (factura == null) return null;
 
             var cmdItems = conexion.CreateCommand();
             cmdItems.CommandText = "SELECT Producto, Cantidad, PrecioUnitario FROM FacturaItemHistorico WHERE FacturaID = @ID";
             cmdItems.Parameters.AddWithValue("@ID", facturaID);
-            
+
             using (var lectorI = await cmdItems.ExecuteReaderAsync())
             {
                 while (await lectorI.ReadAsync())
@@ -219,6 +229,63 @@ namespace Facturar.Components.Data
                 }
             }
             return factura;
+        }
+
+        public async Task RecargarFacturaEnBorradorAsync(int facturaID)
+        {
+            using var conexion = new SqliteConnection($"Datasource={ruta}");
+            await conexion.OpenAsync();
+            using var transaccion = conexion.BeginTransaction();
+
+            try
+            {
+                var cmdLimpiar = conexion.CreateCommand();
+                cmdLimpiar.Transaction = transaccion;
+                cmdLimpiar.CommandText = "DELETE FROM FacturaItem";
+                await cmdLimpiar.ExecuteNonQueryAsync();
+
+                var cmdObtener = conexion.CreateCommand();
+                cmdObtener.Transaction = transaccion;
+                cmdObtener.CommandText = "SELECT Producto, Cantidad, PrecioUnitario FROM FacturaItemHistorico WHERE FacturaID = @ID";
+                cmdObtener.Parameters.AddWithValue("@ID", facturaID);
+
+                var itemsHistoricos = new List<FacturaItem>();
+                using (var lector = await cmdObtener.ExecuteReaderAsync())
+                {
+                    while (await lector.ReadAsync())
+                    {
+                        itemsHistoricos.Add(new FacturaItem
+                        {
+                            Producto = lector.GetString(0),
+                            Cantidad = lector.GetInt32(1),
+                            PrecioUnitario = lector.GetDecimal(2)
+                        });
+                    }
+                }
+
+                int proximoId = 1;
+                foreach (var item in itemsHistoricos)
+                {
+                    var cmdInsertar = conexion.CreateCommand();
+                    cmdInsertar.Transaction = transaccion;
+                    cmdInsertar.CommandText = @"
+                        INSERT INTO FacturaItem (Identificador, Producto, Cantidad, PrecioUnitario) 
+                        VALUES(@IDENTIFICADOR, @PRODUCTO, @CANTIDAD, @PRECIO)";
+
+                    cmdInsertar.Parameters.AddWithValue("@IDENTIFICADOR", proximoId++);
+                    cmdInsertar.Parameters.AddWithValue("@PRODUCTO", item.Producto);
+                    cmdInsertar.Parameters.AddWithValue("@CANTIDAD", item.Cantidad);
+                    cmdInsertar.Parameters.AddWithValue("@PRECIO", item.PrecioUnitario);
+                    await cmdInsertar.ExecuteNonQueryAsync();
+                }
+
+                await transaccion.CommitAsync();
+            }
+            catch
+            {
+                await transaccion.RollbackAsync();
+                throw;
+            }
         }
     }
 }
