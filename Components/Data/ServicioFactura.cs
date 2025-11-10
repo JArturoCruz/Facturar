@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Facturar.Components.Data 
+namespace Facturar.Components.Data
 {
     public class ServicioFactura
     {
@@ -48,6 +48,27 @@ namespace Facturar.Components.Data
             comando.Parameters.AddWithValue("@PRODUCTO", item.Producto);
             comando.Parameters.AddWithValue("@CANTIDAD", item.Cantidad);
             comando.Parameters.AddWithValue("@PRECIO", item.PrecioUnitario);
+
+            await comando.ExecuteNonQueryAsync();
+        }
+
+        public async Task ActualizarItem(FacturaItem item)
+        {
+            using var conexion = new SqliteConnection($"Datasource={ruta}");
+            await conexion.OpenAsync();
+
+            var comando = conexion.CreateCommand();
+            comando.CommandText = @"
+                UPDATE FacturaItem 
+                SET Producto = @PRODUCTO, 
+                    Cantidad = @CANTIDAD, 
+                    PrecioUnitario = @PRECIO
+                WHERE Identificador = @IDENTIFICADOR";
+
+            comando.Parameters.AddWithValue("@PRODUCTO", item.Producto);
+            comando.Parameters.AddWithValue("@CANTIDAD", item.Cantidad);
+            comando.Parameters.AddWithValue("@PRECIO", item.PrecioUnitario);
+            comando.Parameters.AddWithValue("@IDENTIFICADOR", item.Identificador);
 
             await comando.ExecuteNonQueryAsync();
         }

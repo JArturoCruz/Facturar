@@ -1,9 +1,9 @@
-﻿using Facturar.Components.Data; 
+﻿using Facturar.Components.Data;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Facturar.Components.Servicio 
+namespace Facturar.Components.Servicio
 {
     public class ControladorFacturacion
     {
@@ -34,20 +34,36 @@ namespace Facturar.Components.Servicio
             await _servicioFactura.GuardarValorConfig("DraftPrecioUnitario", DraftItem.PrecioUnitario.ToString());
         }
 
-        public async Task AgregarDraftItemAsync()
+        public async Task GuardarCambiosDraftItemAsync()
         {
-            var nuevoItem = new FacturaItem
+            if (DraftItem.Identificador == 0)
             {
-                Producto = DraftItem.Producto,
-                Cantidad = DraftItem.Cantidad,
-                PrecioUnitario = DraftItem.PrecioUnitario,
-                Identificador = await GenerarNuevoID() 
-            };
-
-            await _servicioFactura.AgregarItem(nuevoItem);
+                DraftItem.Identificador = await GenerarNuevoID();
+                await _servicioFactura.AgregarItem(DraftItem);
+            }
+            else
+            {
+                await _servicioFactura.ActualizarItem(DraftItem);
+            }
 
             DraftItem = new FacturaItem { Cantidad = 1, PrecioUnitario = 0.01m };
+            await GuardarDraftItemAsync();
+        }
 
+        public void CargarItemParaEdicion(FacturaItem item)
+        {
+            DraftItem = new FacturaItem
+            {
+                Identificador = item.Identificador,
+                Producto = item.Producto,
+                Cantidad = item.Cantidad,
+                PrecioUnitario = item.PrecioUnitario
+            };
+        }
+
+        public async Task CancelarEdicionAsync()
+        {
+            DraftItem = new FacturaItem { Cantidad = 1, PrecioUnitario = 0.01m };
             await GuardarDraftItemAsync();
         }
 

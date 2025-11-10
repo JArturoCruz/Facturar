@@ -12,7 +12,7 @@
 {
     <div class="card shadow-sm mb-4">
         <div class="card-header">
-            <h3>Agregar Producto</h3>
+            <h3>@(Controlador.DraftItem.Identificador == 0 ? "Agregar Producto" : $"Editando: {Controlador.DraftItem.Producto}")</h3>
         </div>
         <div class="card-body">
             <EditForm Model="Controlador.DraftItem" OnValidSubmit="OnFormSubmit">
@@ -22,7 +22,7 @@
                     <label for="producto" class="form-label">Producto:</label>
                     <InputText id="producto" class="form-control"
                                @bind-Value="Controlador.DraftItem.Producto"
-                               @bind-Value:after="Controlador.GuardarDraftItemAsync" /> @* <-- CORRECCIÓN AQUÍ *@
+                               @bind-Value:after="Controlador.GuardarDraftItemAsync" />
                     <ValidationMessage For="() => Controlador.DraftItem.Producto" />
                 </div>
 
@@ -31,19 +31,27 @@
                         <label for="cantidad" class="form-label">Cantidad:</label>
                         <InputNumber id="cantidad" class="form-control"
                                      @bind-Value="Controlador.DraftItem.Cantidad"
-                                     @bind-Value:after="Controlador.GuardarDraftItemAsync" /> @* <-- CORRECCIÓN AQUÍ *@
+                                     @bind-Value:after="Controlador.GuardarDraftItemAsync" />
                         <ValidationMessage For="() => Controlador.DraftItem.Cantidad" />
                     </div>
                     <div class="col-md-6">
                         <label for="precio" class="form-label">Precio Unitario:</label>
                         <InputNumber id="precio" class="form-control"
                                      @bind-Value="Controlador.DraftItem.PrecioUnitario"
-                                     @bind-Value:after="Controlador.GuardarDraftItemAsync" /> @* <-- CORRECCIÓN AQUÍ *@
+                                     @bind-Value:after="Controlador.GuardarDraftItemAsync" />
                         <ValidationMessage For="() => Controlador.DraftItem.PrecioUnitario" />
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary">Agregar Producto</button>
+                @if (Controlador.DraftItem.Identificador == 0)
+                {
+                    <button type="submit" class="btn btn-primary">Agregar Producto</button>
+                }
+                else
+                {
+                    <button type="submit" class="btn btn-success">Actualizar Producto</button>
+                    <button type="button" class="btn btn-secondary ms-2" @onclick="CancelarEdicion">Cancelar</button>
+                }
             </EditForm>
         </div>
     </div>
@@ -80,6 +88,9 @@ else
                             <td>@item.PrecioUnitario.ToString("C")</td>
                             <td>@item.Subtotal.ToString("C")</td>
                             <td>
+                                <button class="btn btn-primary btn-sm me-1" @onclick="() => PrepararEdicion(item)">
+                                    ✏️
+                                </button>
                                 <button class="btn btn-danger btn-sm" @onclick="() => EliminarItemDeFactura(item)">
                                     🗑️
                                 </button>
@@ -89,7 +100,7 @@ else
                 </tbody>
                 <tfoot>
                     <tr class="table-dark">
-                        <td colspan="3" class="text-end fw-bold">TOTAL:</td>
+                        <td colspan="4" class="text-end fw-bold">TOTAL:</td>
                         <td class="fw-bold">@TotalFactura.ToString("C")</td>
                         <td></td>
                     </tr>
@@ -116,7 +127,7 @@ else
 
     private async Task OnFormSubmit()
     {
-        await Controlador.AgregarDraftItemAsync();
+        await Controlador.GuardarCambiosDraftItemAsync();
         itemsFactura = await Controlador.ObtenerItems();
         StateHasChanged();
     }
@@ -125,6 +136,17 @@ else
     {
         await Controlador.EliminarItem(item.Identificador);
         itemsFactura = await Controlador.ObtenerItems();
+        StateHasChanged();
+    }
+
+    private void PrepararEdicion(FacturaItem item)
+    {
+        Controlador.CargarItemParaEdicion(item);
+    }
+
+    private async Task CancelarEdicion()
+    {
+        await Controlador.CancelarEdicionAsync();
         StateHasChanged();
     }
 }
