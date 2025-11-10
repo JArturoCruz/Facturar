@@ -1,37 +1,35 @@
-﻿using Factura.Components.Data;
-using Microsoft.Data.Sqlite;
+﻿using Microsoft.Data.Sqlite;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Factura.Components.Data
+namespace Facturar.Components.Data 
 {
-    public class ServicioFacturacion
+    public class ServicioFactura
     {
         private List<FacturaItem> items = new List<FacturaItem>();
         private readonly String ruta = "mibase.db";
 
         public async Task<List<FacturaItem>> ObtenerItems()
         {
-            if (!items.Any())
+            items.Clear();
+
+            using var conexion = new SqliteConnection($"Datasource={ruta}");
+            await conexion.OpenAsync();
+
+            var comando = conexion.CreateCommand();
+            comando.CommandText = "SELECT Identificador, Producto, Cantidad, PrecioUnitario FROM FacturaItem";
+            using var lector = await comando.ExecuteReaderAsync();
+
+            while (await lector.ReadAsync())
             {
-                using var conexion = new SqliteConnection($"Datasource={ruta}");
-                await conexion.OpenAsync();
-
-                var comando = conexion.CreateCommand();
-                comando.CommandText = "SELECT Identificador, Producto, Cantidad, PrecioUnitario FROM FacturaItem";
-                using var lector = await comando.ExecuteReaderAsync();
-
-                while (await lector.ReadAsync())
+                items.Add(new FacturaItem
                 {
-                    items.Add(new FacturaItem
-                    {
-                        Identificador = lector.GetInt32(0),
-                        Producto = lector.GetString(1),
-                        Cantidad = lector.GetInt32(2),
-                        PrecioUnitario = lector.GetDecimal(3)
-                    });
-                }
+                    Identificador = lector.GetInt32(0),
+                    Producto = lector.GetString(1),
+                    Cantidad = lector.GetInt32(2),
+                    PrecioUnitario = lector.GetDecimal(3)
+                });
             }
             return items;
         }
@@ -52,8 +50,6 @@ namespace Factura.Components.Data
             comando.Parameters.AddWithValue("@PRECIO", item.PrecioUnitario);
 
             await comando.ExecuteNonQueryAsync();
-
-            items.Add(item);
         }
 
         public async Task EliminarItem(int identificador)
@@ -66,8 +62,38 @@ namespace Factura.Components.Data
             comando.Parameters.AddWithValue("@IDENTIFICADOR", identificador);
 
             await comando.ExecuteNonQueryAsync();
+        }
 
-            items.RemoveAll(i => i.Identificador == identificador);
+
+        public async Task<string> ObtenerValorConfig(string clave)
+        {
+            using var conexion = new SqliteConnection($"Datasource={ruta}");
+            await conexion.OpenAsync();
+
+            var comando = conexion.CreateCommand();
+            comando.CommandText = "SELECT valor FROM configuracion WHERE clave = @CLAVE";
+            comando.Parameters.AddWithValue("@CLAVE", clave);
+
+            var resultado = await comando.ExecuteScalarAsync();
+
+            return resultado?.ToString() ?? string.Empty;
+        }
+
+        public async Task GuardarValorConfig(string clave, string valor)
+        {
+            using var conexion = new SqliteConnection($"Datasource={ruta}");
+            await conexion.OpenAsync();
+
+            var comando = conexion.CreateCommand();
+
+            comando.CommandText = @"
+                INSERT OR REPLACE INTO configuracion (clave, valor)
+                VALUES (@CLAVE, @VALOR)
+            ";
+            comando.Parameters.AddWithValue("@CLAVE", clave);
+            comando.Parameters.AddWithValue("@VALOR", valor ?? string.Empty);
+
+            await comando.ExecuteNonQueryAsync();
         }
     }
 }

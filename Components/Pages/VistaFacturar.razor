@@ -1,6 +1,6 @@
 ﻿@page "/facturador"
-@using Factura.Components.Data
-@using Factura.Components.Servicio
+@using Facturar.Components.Data
+@using Facturar.Components.Servicio
 @rendermode InteractiveServer
 @inject ControladorFacturacion Controlador
 
@@ -8,31 +8,51 @@
 
 <h1>Crear Nueva Factura</h1>
 
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
-        <EditForm Model="newItem" OnValidSubmit="AgregarItemAFactura">
-            <DataAnnotationsValidator />
-            <div class="mb-3">
-                <label for="producto" class="form-label">Producto:</label>
-                <InputText id="producto" class="form-control" @bind-Value="newItem.Producto" />
-                <ValidationMessage For="() => newItem.Producto" />
-            </div>
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label for="cantidad" class="form-label">Cantidad:</label>
-                    <InputNumber id="cantidad" class="form-control" @bind-Value="newItem.Cantidad" />
-                    <ValidationMessage For="() => newItem.Cantidad" />
+@if (Controlador != null && Controlador.DraftItem != null)
+{
+    <div class="card shadow-sm mb-4">
+        <div class="card-header">
+            <h3>Agregar Producto</h3>
+        </div>
+        <div class="card-body">
+            <EditForm Model="Controlador.DraftItem" OnValidSubmit="OnFormSubmit">
+                <DataAnnotationsValidator />
+
+                <div class="mb-3">
+                    <label for="producto" class="form-label">Producto:</label>
+                    <InputText id="producto" class="form-control"
+                               @bind-Value="Controlador.DraftItem.Producto"
+                               @bind-Value:after="Controlador.GuardarDraftItemAsync" /> @* <-- CORRECCIÓN AQUÍ *@
+                    <ValidationMessage For="() => Controlador.DraftItem.Producto" />
                 </div>
-                <div class="col-md-6">
-                    <label for="precio" class="form-label">Precio Unitario:</label>
-                    <InputNumber id="precio" class="form-control" @bind-Value="newItem.PrecioUnitario" />
-                    <ValidationMessage For="() => newItem.PrecioUnitario" />
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="cantidad" class="form-label">Cantidad:</label>
+                        <InputNumber id="cantidad" class="form-control"
+                                     @bind-Value="Controlador.DraftItem.Cantidad"
+                                     @bind-Value:after="Controlador.GuardarDraftItemAsync" /> @* <-- CORRECCIÓN AQUÍ *@
+                        <ValidationMessage For="() => Controlador.DraftItem.Cantidad" />
+                    </div>
+                    <div class="col-md-6">
+                        <label for="precio" class="form-label">Precio Unitario:</label>
+                        <InputNumber id="precio" class="form-control"
+                                     @bind-Value="Controlador.DraftItem.PrecioUnitario"
+                                     @bind-Value:after="Controlador.GuardarDraftItemAsync" /> @* <-- CORRECCIÓN AQUÍ *@
+                        <ValidationMessage For="() => Controlador.DraftItem.PrecioUnitario" />
+                    </div>
                 </div>
-            </div>
-            <button type="submit" class="btn btn-primary">Agregar Producto</button>
-        </EditForm>
+
+                <button type="submit" class="btn btn-primary">Agregar Producto</button>
+            </EditForm>
+        </div>
     </div>
-</div>
+}
+else
+{
+    <p>Cargando controlador...</p>
+}
+
 
 <div class="card shadow-sm">
     <div class="card-header">
@@ -86,27 +106,25 @@
 
 @code {
     private List<FacturaItem> itemsFactura = new List<FacturaItem>();
-    private FacturaItem newItem = new();
-
     private decimal TotalFactura => itemsFactura.Sum(item => item.Subtotal);
 
     protected override async Task OnInitializedAsync()
     {
+        await Controlador.CargarDraftItemAsync();
         itemsFactura = await Controlador.ObtenerItems();
     }
 
-    private async Task AgregarItemAFactura()
+    private async Task OnFormSubmit()
     {
-        await Controlador.AgregarItem(newItem);
-        itemsFactura = await Controlador.ObtenerItems(); // Recargamos la lista
-        newItem = new FacturaItem(); // Reseteamos el formulario
+        await Controlador.AgregarDraftItemAsync();
+        itemsFactura = await Controlador.ObtenerItems();
         StateHasChanged();
     }
 
     private async Task EliminarItemDeFactura(FacturaItem item)
     {
         await Controlador.EliminarItem(item.Identificador);
-        itemsFactura = await Controlador.ObtenerItems(); // Recargamos la lista
+        itemsFactura = await Controlador.ObtenerItems();
         StateHasChanged();
     }
 }

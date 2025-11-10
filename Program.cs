@@ -1,7 +1,5 @@
-using Factura.Components;
-// Importamos los nuevos namespaces
-using Factura.Components.Data;
-using Factura.Components.Servicio;
+using Facturar.Components.Data;
+using Facturar.Components.Servicio;
 using Facturar.Components;
 using Microsoft.Data.Sqlite;
 
@@ -10,9 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// Registramos los nuevos servicios como en tu proyecto original
 builder.Services.AddSingleton<ControladorFacturacion>();
-builder.Services.AddSingleton<ServicioFacturacion>();
+builder.Services.AddSingleton<ServicioFactura>();
 
 var app = builder.Build();
 
@@ -29,22 +26,13 @@ app.UseAntiforgery();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-// --- LÓGICA DE LA BASE DE DATOS ---
+
 String ruta = "mibase.db";
 using var conexion = new SqliteConnection($"DataSource={ruta}");
 conexion.Open();
 var comando = conexion.CreateCommand();
 
 comando.CommandText = @"
-    -- Mantenemos tu tabla original por si la necesitas
-    CREATE TABLE IF NOT EXISTS
-    juego( identificador integer, nombre text, jugado integer);
-
-    -- Mantenemos tu tabla de configuración
-    CREATE TABLE IF NOT EXISTS
-    configuracion( clave TEXT PRIMARY KEY, valor TEXT);
-
-    -- --- TABLA NUEVA PARA FACTURAS ---
     CREATE TABLE IF NOT EXISTS
     FacturaItem(
         Identificador INTEGER,
@@ -52,6 +40,15 @@ comando.CommandText = @"
         Cantidad INTEGER,
         PrecioUnitario REAL 
     );
+
+    -- Tabla de configuración (como en tu proyecto xx)
+    CREATE TABLE IF NOT EXISTS
+    configuracion( clave TEXT PRIMARY KEY, valor TEXT);
+
+    -- Valores iniciales para el borrador del formulario
+    INSERT OR IGNORE INTO configuracion (clave, valor) VALUES ('DraftProducto', '');
+    INSERT OR IGNORE INTO configuracion (clave, valor) VALUES ('DraftCantidad', '1');
+    INSERT OR IGNORE INTO configuracion (clave, valor) VALUES ('DraftPrecioUnitario', '0.01');
 ";
 comando.ExecuteNonQuery();
 conexion.Close();

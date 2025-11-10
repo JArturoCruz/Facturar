@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Factura.Components.Data
+namespace Facturar.Components.Data 
 {
     public class FacturaItem
     {
@@ -14,8 +14,7 @@ namespace Factura.Components.Data
 
         [Range(0.01, (double)decimal.MaxValue, ErrorMessage = "El precio debe ser mayor a 0.")]
         public decimal PrecioUnitario { get; set; } = 0.01m;
-
-        // Propiedad calculada
+       
         public decimal Subtotal => Cantidad * PrecioUnitario;
     }
 }

@@ -1,38 +1,69 @@
-﻿using Factura.Components.Data;
+﻿using Facturar.Components.Data; 
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Factura.Components.Servicio
+namespace Facturar.Components.Servicio 
 {
     public class ControladorFacturacion
     {
-        private readonly ServicioFacturacion _servicioFacturacion;
+        private readonly ServicioFactura _servicioFactura;
 
-        public ControladorFacturacion(ServicioFacturacion servicioFacturacion)
+        public FacturaItem DraftItem { get; set; } = new FacturaItem { Cantidad = 1, PrecioUnitario = 0.01m };
+
+        public ControladorFacturacion(ServicioFactura servicioFacturacion)
         {
-            _servicioFacturacion = servicioFacturacion;
+            _servicioFactura = servicioFacturacion;
+        }
+
+        public async Task CargarDraftItemAsync()
+        {
+            DraftItem.Producto = await _servicioFactura.ObtenerValorConfig("DraftProducto");
+
+            int.TryParse(await _servicioFactura.ObtenerValorConfig("DraftCantidad"), out int cantidad);
+            DraftItem.Cantidad = cantidad > 0 ? cantidad : 1;
+
+            decimal.TryParse(await _servicioFactura.ObtenerValorConfig("DraftPrecioUnitario"), out decimal precio);
+            DraftItem.PrecioUnitario = precio > 0 ? precio : 0.01m;
+        }
+
+        public async Task GuardarDraftItemAsync()
+        {
+            await _servicioFactura.GuardarValorConfig("DraftProducto", DraftItem.Producto ?? string.Empty);
+            await _servicioFactura.GuardarValorConfig("DraftCantidad", DraftItem.Cantidad.ToString());
+            await _servicioFactura.GuardarValorConfig("DraftPrecioUnitario", DraftItem.PrecioUnitario.ToString());
+        }
+
+        public async Task AgregarDraftItemAsync()
+        {
+            var nuevoItem = new FacturaItem
+            {
+                Producto = DraftItem.Producto,
+                Cantidad = DraftItem.Cantidad,
+                PrecioUnitario = DraftItem.PrecioUnitario,
+                Identificador = await GenerarNuevoID() 
+            };
+
+            await _servicioFactura.AgregarItem(nuevoItem);
+
+            DraftItem = new FacturaItem { Cantidad = 1, PrecioUnitario = 0.01m };
+
+            await GuardarDraftItemAsync();
         }
 
         public async Task<List<FacturaItem>> ObtenerItems()
         {
-            return await _servicioFacturacion.ObtenerItems();
-        }
-
-        public async Task AgregarItem(FacturaItem item)
-        {
-            item.Identificador = await GenerarNuevoID();
-            await _servicioFacturacion.AgregarItem(item);
+            return await _servicioFactura.ObtenerItems();
         }
 
         public async Task EliminarItem(int identificador)
         {
-            await _servicioFacturacion.EliminarItem(identificador);
+            await _servicioFactura.EliminarItem(identificador);
         }
 
         private async Task<int> GenerarNuevoID()
         {
-            var items = await _servicioFacturacion.ObtenerItems();
+            var items = await this.ObtenerItems();
             return items.Any() ? items.Max(i => i.Identificador) + 1 : 1;
         }
     }
