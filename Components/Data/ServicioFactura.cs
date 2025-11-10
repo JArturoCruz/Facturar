@@ -288,6 +288,77 @@ namespace Facturar.Components.Data
             }
         }
 
+        public async Task ActualizarFacturaCompletaAsync(int facturaID, string nombreFactura, List<FacturaItem> itemsDraft)
+        {
+            using var conexion = new SqliteConnection($"Datasource={ruta}");
+            await conexion.OpenAsync();
+
+            var cmdValidar = conexion.CreateCommand();
+            cmdValidar.CommandText = "SELECT 1 FROM Factura WHERE NombreFactura = @NOMBRE AND FacturaID != @ID LIMIT 1";
+            cmdValidar.Parameters.AddWithValue("@NOMBRE", nombreFactura);
+            cmdValidar.Parameters.AddWithValue("@ID", facturaID);
+
+            var existe = await cmdValidar.ExecuteScalarAsync();
+            if (existe != null)
+            {
+                throw new System.Exception("Error: Ya existe OTRA factura con ese nombre. Por favor, elige otro.");
+            }
+
+            using var transaccion = conexion.BeginTransaction();
+            try
+            {
+                var total = itemsDraft.Sum(i => i.Subtotal);
+                var fecha = DateTime.UtcNow.ToString("o");
+
+                var cmdFactura = conexion.CreateCommand();
+                cmdFactura.Transaction = transaccion;
+                cmdFactura.CommandText = @"
+                    UPDATE Factura 
+                    SET NombreFactura = @NOMBRE, 
+                        FechaCreacion = @FECHA, 
+                        Total = @TOTAL
+                    WHERE FacturaID = @ID";
+                cmdFactura.Parameters.AddWithValue("@NOMBRE", nombreFactura);
+                cmdFactura.Parameters.AddWithValue("@FECHA", fecha);
+                cmdFactura.Parameters.AddWithValue("@TOTAL", total);
+                cmdFactura.Parameters.AddWithValue("@ID", facturaID);
+                await cmdFactura.ExecuteNonQueryAsync();
+
+                var cmdBorrarItems = conexion.CreateCommand();
+                cmdBorrarItems.Transaction = transaccion;
+                cmdBorrarItems.CommandText = "DELETE FROM FacturaItemHistorico WHERE FacturaID = @ID";
+                cmdBorrarItems.Parameters.AddWithValue("@ID", facturaID);
+                await cmdBorrarItems.ExecuteNonQueryAsync();
+
+                foreach (var item in itemsDraft)
+                {
+                    var cmdItem = conexion.CreateCommand();
+                    cmdItem.Transaction = transaccion;
+                    cmdItem.CommandText = @"
+                        INSERT INTO FacturaItemHistorico (FacturaID, Producto, Cantidad, PrecioUnitario)
+                        VALUES (@FACTURA_ID, @PRODUCTO, @CANTIDAD, @PRECIO)
+                    ";
+                    cmdItem.Parameters.AddWithValue("@FACTURA_ID", facturaID);
+                    cmdItem.Parameters.AddWithValue("@PRODUCTO", item.Producto);
+                    cmdItem.Parameters.AddWithValue("@CANTIDAD", item.Cantidad);
+                    cmdItem.Parameters.AddWithValue("@PRECIO", item.PrecioUnitario);
+                    await cmdItem.ExecuteNonQueryAsync();
+                }
+
+                var cmdLimpiarBorrador = conexion.CreateCommand();
+                cmdLimpiarBorrador.Transaction = transaccion;
+                cmdLimpiarBorrador.CommandText = "DELETE FROM FacturaItem";
+                await cmdLimpiarBorrador.ExecuteNonQueryAsync();
+
+                await transaccion.CommitAsync();
+            }
+            catch
+            {
+                await transaccion.RollbackAsync();
+                throw;
+            }
+        }
+
         public async Task EliminarFacturaGuardadaAsync(int facturaID)
         {
             using var conexion = new SqliteConnection($"Datasource={ruta}");
@@ -315,6 +386,15 @@ namespace Facturar.Components.Data
                 await transaccion.RollbackAsync();
                 throw;
             }
+        }
+
+        public async Task LimpiarBorradorCompletoAsync()
+        {
+            using var conexion = new SqliteConnection($"Datasource={ruta}");
+            await conexion.OpenAsync();
+            var comando = conexion.CreateCommand();
+            comando.CommandText = "DELETE FROM FacturaItem";
+            await comando.ExecuteNonQueryAsync();
         }
     }
 }

@@ -72,6 +72,9 @@ else
 
         if (confirmado)
         {
+            Controlador.NombreFacturaEnModificacion = factura.NombreFactura;
+            Controlador.FacturaIDEnModificacion = factura.FacturaID;
+
             await Controlador.RecargarFacturaEnBorradorAsync(factura.FacturaID);
             Navigation.NavigateTo("/facturador");
         }

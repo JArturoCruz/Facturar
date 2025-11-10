@@ -4,10 +4,26 @@
 @rendermode InteractiveServer
 @inject ControladorFacturacion Controlador
 @inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Facturador</PageTitle>
 
-<h1>Crear Nueva Factura</h1>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    @if (Controlador.FacturaIDEnModificacion.HasValue)
+    {
+        <h1>Modificando Factura</h1>
+    }
+    else
+    {
+        <h1>Crear Nueva Factura</h1>
+    }
+
+    <div>
+        <a href="/facturas" class="btn btn-secondary me-2">Ver Facturas Guardadas</a>
+        <button class="btn btn-info" @onclick="LimpiarFacturador">Nueva Factura (Limpiar)</button>
+    </div>
+</div>
+
 
 @if (Controlador != null && Controlador.DraftItem != null)
 {
@@ -71,7 +87,15 @@ else
         {
             <div class="d-flex">
                 <InputText @bind-Value="nombreFactura" class="form-control me-2" placeholder="Nombre de la factura" />
-                <button class="btn btn-success" @onclick="GuardarFactura">Guardar</button>
+
+                @if (Controlador.FacturaIDEnModificacion.HasValue)
+                {
+                    <button class="btn btn-warning" @onclick="GuardarFactura">Actualizar</button>
+                }
+                else
+                {
+                    <button class="btn btn-success" @onclick="GuardarFactura">Guardar</button>
+                }
             </div>
         }
     </div>
@@ -126,14 +150,6 @@ else
             <p class="text-center text-muted">Aún no hay productos en la factura.</p>
         }
     </div>
-    <ul>
-        <li>
-            <a href="/facturador">Crear nueva factura</a>
-        </li>
-        <li>
-            <a href="/facturas">Ver facturas guardadas</a>
-        </li>
-    </ul>
 </div>
 
 
@@ -148,6 +164,15 @@ else
     {
         await Controlador.CargarDraftItemAsync();
         itemsFactura = await Controlador.ObtenerItems();
+
+        if (Controlador.FacturaIDEnModificacion.HasValue)
+        {
+            nombreFactura = Controlador.NombreFacturaEnModificacion;
+        }
+        else
+        {
+            nombreFactura = string.Empty;
+        }
     }
 
     private async Task OnFormSubmit()
@@ -174,12 +199,24 @@ else
         await Controlador.CancelarEdicionAsync();
         StateHasChanged();
     }
+
     private async Task GuardarFactura()
     {
         errorAlGuardar = string.Empty;
         try
         {
-            await Controlador.GuardarFacturaActualAsync(nombreFactura, itemsFactura);
+            if (Controlador.FacturaIDEnModificacion.HasValue)
+            {
+                await Controlador.ActualizarFacturaGuardadaAsync(
+                    Controlador.FacturaIDEnModificacion.Value,
+                    nombreFactura,
+                    itemsFactura
+                );
+            }
+            else
+            {
+                await Controlador.GuardarFacturaActualAsync(nombreFactura, itemsFactura);
+            }
 
             nombreFactura = string.Empty;
             itemsFactura.Clear();
@@ -192,6 +229,20 @@ else
             errorAlGuardar = ex.Message;
             StateHasChanged();
         }
-
     }
-}
+
+    private async Task LimpiarFacturador()
+    {
+        var mensaje = "Se limpiará el borrador actual. Si estás modificando una factura, se cancelará la modificación.\n\n¿Deseas continuar?";
+        bool confirmado = await JSRuntime.InvokeAsync<bool>("confirm", mensaje);
+
+        if (confirmado)
+        {
+            await Controlador.LimpiarBorradorCompletoAsync();
+            itemsFactura.Clear();
+            nombreFactura = string.Empty;
+            errorAlGuardar = string.Empty;
+            StateHasChanged();
+        }
+    }
+}   

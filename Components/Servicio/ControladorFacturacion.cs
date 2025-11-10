@@ -12,6 +12,9 @@ namespace Facturar.Components.Servicio
 
         public FacturaItem DraftItem { get; set; } = new FacturaItem { Cantidad = 1, PrecioUnitario = 0.01m };
 
+        public int? FacturaIDEnModificacion { get; set; } = null;
+        public string NombreFacturaEnModificacion { get; set; } = string.Empty;
+
         public ControladorFacturacion(ServicioFactura servicioFacturacion)
         {
             _servicioFactura = servicioFacturacion;
@@ -107,6 +110,26 @@ namespace Facturar.Components.Servicio
             }
 
             await _servicioFactura.GuardarFacturaCompletaAsync(nombreFactura, itemsDraft);
+
+            FacturaIDEnModificacion = null;
+            NombreFacturaEnModificacion = string.Empty;
+        }
+
+        public async Task ActualizarFacturaGuardadaAsync(int facturaID, string nombreFactura, List<FacturaItem> itemsDraft)
+        {
+            if (string.IsNullOrWhiteSpace(nombreFactura))
+            {
+                throw new System.Exception("El nombre de la factura es obligatorio.");
+            }
+            if (!itemsDraft.Any())
+            {
+                throw new System.Exception("No se puede guardar una factura vacía.");
+            }
+
+            await _servicioFactura.ActualizarFacturaCompletaAsync(facturaID, nombreFactura, itemsDraft);
+
+            FacturaIDEnModificacion = null;
+            NombreFacturaEnModificacion = string.Empty;
         }
 
         public async Task<List<Factura>> ObtenerFacturasGuardadasAsync()
@@ -127,6 +150,17 @@ namespace Facturar.Components.Servicio
         public async Task EliminarFacturaGuardadaAsync(int facturaID)
         {
             await _servicioFactura.EliminarFacturaGuardadaAsync(facturaID);
+        }
+
+        public async Task LimpiarBorradorCompletoAsync()
+        {
+            await _servicioFactura.LimpiarBorradorCompletoAsync();
+
+            DraftItem = new FacturaItem { Cantidad = 1, PrecioUnitario = 0.01m };
+            await this.GuardarDraftItemAsync();
+
+            FacturaIDEnModificacion = null;
+            NombreFacturaEnModificacion = string.Empty;
         }
     }
 }

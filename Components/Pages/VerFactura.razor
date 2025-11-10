@@ -8,11 +8,7 @@
 
 <PageTitle>Detalle de Factura</PageTitle>
 
-@if (factura == null)
-{
-    <p><em>Cargando detalle...</em></p>
-}
-else
+@if (factura != null)
 {
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1>Factura: @factura.NombreFactura</h1>
@@ -70,19 +66,40 @@ else
         </div>
     </div>
 }
+else if (facturaNoEncontrada)
+{
+    <div class="alert alert-danger" role="alert">
+        <h4 class="alert-heading">Error: Factura no encontrada</h4>
+        <p>No se pudo encontrar una factura con el ID <strong>@FacturaID</strong>.</p>
+        <hr>
+        <p class="mb-0">
+            <a href="/facturas" class="btn btn-secondary">Volver a la lista de facturas</a>
+        </p>
+    </div>
+}
+else
+{
+    <p><em>Cargando detalle...</em></p>
+}
+
 
 @code {
     [Parameter]
     public int FacturaID { get; set; }
 
     private Factura factura;
+    private bool facturaNoEncontrada = false;
 
     protected override async Task OnParametersSetAsync()
     {
+        factura = null;
+        facturaNoEncontrada = false;
+
         factura = await Controlador.ObtenerDetalleFacturaAsync(FacturaID);
+
         if (factura == null)
         {
-            Navigation.NavigateTo("/facturas");
+            facturaNoEncontrada = true;
         }
     }
 
@@ -93,6 +110,9 @@ else
 
         if (confirmado)
         {
+            Controlador.NombreFacturaEnModificacion = factura.NombreFactura;
+            Controlador.FacturaIDEnModificacion = factura.FacturaID;
+
             await Controlador.RecargarFacturaEnBorradorAsync(factura.FacturaID);
             Navigation.NavigateTo("/facturador");
         }
