@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Globalization; 
 
-namespace Facturar.Components.Data
+namespace Facturar.Components.Data 
 {
     public class ServicioFactura
     {
@@ -13,14 +14,11 @@ namespace Facturar.Components.Data
         public async Task<List<FacturaItem>> ObtenerItems()
         {
             items.Clear();
-
             using var conexion = new SqliteConnection($"Datasource={ruta}");
             await conexion.OpenAsync();
-
             var comando = conexion.CreateCommand();
             comando.CommandText = "SELECT Identificador, Producto, Cantidad, PrecioUnitario FROM FacturaItem";
             using var lector = await comando.ExecuteReaderAsync();
-
             while (await lector.ReadAsync())
             {
                 items.Add(new FacturaItem
@@ -38,17 +36,14 @@ namespace Facturar.Components.Data
         {
             using var conexion = new SqliteConnection($"Datasource={ruta}");
             await conexion.OpenAsync();
-
             var comando = conexion.CreateCommand();
             comando.CommandText = @"
                 INSERT INTO FacturaItem (Identificador, Producto, Cantidad, PrecioUnitario) 
                 VALUES(@IDENTIFICADOR, @PRODUCTO, @CANTIDAD, @PRECIO)";
-
             comando.Parameters.AddWithValue("@IDENTIFICADOR", item.Identificador);
             comando.Parameters.AddWithValue("@PRODUCTO", item.Producto);
             comando.Parameters.AddWithValue("@CANTIDAD", item.Cantidad);
             comando.Parameters.AddWithValue("@PRECIO", item.PrecioUnitario);
-
             await comando.ExecuteNonQueryAsync();
         }
 
@@ -56,7 +51,6 @@ namespace Facturar.Components.Data
         {
             using var conexion = new SqliteConnection($"Datasource={ruta}");
             await conexion.OpenAsync();
-
             var comando = conexion.CreateCommand();
             comando.CommandText = @"
                 UPDATE FacturaItem 
@@ -64,12 +58,10 @@ namespace Facturar.Components.Data
                     Cantidad = @CANTIDAD, 
                     PrecioUnitario = @PRECIO
                 WHERE Identificador = @IDENTIFICADOR";
-
             comando.Parameters.AddWithValue("@PRODUCTO", item.Producto);
             comando.Parameters.AddWithValue("@CANTIDAD", item.Cantidad);
             comando.Parameters.AddWithValue("@PRECIO", item.PrecioUnitario);
             comando.Parameters.AddWithValue("@IDENTIFICADOR", item.Identificador);
-
             await comando.ExecuteNonQueryAsync();
         }
 
@@ -77,26 +69,20 @@ namespace Facturar.Components.Data
         {
             using var conexion = new SqliteConnection($"Datasource={ruta}");
             await conexion.OpenAsync();
-
             var comando = conexion.CreateCommand();
             comando.CommandText = "DELETE FROM FacturaItem WHERE Identificador = @IDENTIFICADOR";
             comando.Parameters.AddWithValue("@IDENTIFICADOR", identificador);
-
             await comando.ExecuteNonQueryAsync();
         }
-
 
         public async Task<string> ObtenerValorConfig(string clave)
         {
             using var conexion = new SqliteConnection($"Datasource={ruta}");
             await conexion.OpenAsync();
-
             var comando = conexion.CreateCommand();
             comando.CommandText = "SELECT valor FROM configuracion WHERE clave = @CLAVE";
             comando.Parameters.AddWithValue("@CLAVE", clave);
-
             var resultado = await comando.ExecuteScalarAsync();
-
             return resultado?.ToString() ?? string.Empty;
         }
 
@@ -104,17 +90,135 @@ namespace Facturar.Components.Data
         {
             using var conexion = new SqliteConnection($"Datasource={ruta}");
             await conexion.OpenAsync();
-
             var comando = conexion.CreateCommand();
-
             comando.CommandText = @"
                 INSERT OR REPLACE INTO configuracion (clave, valor)
                 VALUES (@CLAVE, @VALOR)
             ";
             comando.Parameters.AddWithValue("@CLAVE", clave);
             comando.Parameters.AddWithValue("@VALOR", valor ?? string.Empty);
-
             await comando.ExecuteNonQueryAsync();
+        }
+
+        public async Task GuardarFacturaCompletaAsync(string nombreFactura, List<FacturaItem> itemsDraft)
+        {
+            using var conexion = new SqliteConnection($"Datasource={ruta}");
+            await conexion.OpenAsync();
+
+            using var transaccion = conexion.BeginTransaction();
+            
+            try
+            {
+                var total = itemsDraft.Sum(i => i.Subtotal);
+                var fecha = DateTime.UtcNow.ToString("o"); 
+
+                var cmdFactura = conexion.CreateCommand();
+                cmdFactura.Transaction = transaccion;
+                cmdFactura.CommandText = @"
+                    INSERT INTO Factura (NombreFactura, FechaCreacion, Total)
+                    VALUES (@NOMBRE, @FECHA, @TOTAL);
+                    SELECT last_insert_rowid();
+                ";
+                cmdFactura.Parameters.AddWithValue("@NOMBRE", nombreFactura);
+                cmdFactura.Parameters.AddWithValue("@FECHA", fecha);
+                cmdFactura.Parameters.AddWithValue("@TOTAL", total);
+                
+                long nuevoFacturaID = (long)await cmdFactura.ExecuteScalarAsync();
+
+                foreach (var item in itemsDraft)
+                {
+                    var cmdItem = conexion.CreateCommand();
+                    cmdItem.Transaction = transaccion;
+                    cmdItem.CommandText = @"
+                        INSERT INTO FacturaItemHistorico (FacturaID, Producto, Cantidad, PrecioUnitario)
+                        VALUES (@FACTURA_ID, @PRODUCTO, @CANTIDAD, @PRECIO)
+                    ";
+                    cmdItem.Parameters.AddWithValue("@FACTURA_ID", nuevoFacturaID);
+                    cmdItem.Parameters.AddWithValue("@PRODUCTO", item.Producto);
+                    cmdItem.Parameters.AddWithValue("@CANTIDAD", item.Cantidad);
+                    cmdItem.Parameters.AddWithValue("@PRECIO", item.PrecioUnitario);
+                    await cmdItem.ExecuteNonQueryAsync();
+                }
+
+                var cmdLimpiar = conexion.CreateCommand();
+                cmdLimpiar.Transaction = transaccion;
+                cmdLimpiar.CommandText = "DELETE FROM FacturaItem";
+                await cmdLimpiar.ExecuteNonQueryAsync();
+
+                await transaccion.CommitAsync();
+            }
+            catch
+            {
+                await transaccion.RollbackAsync();
+                throw; 
+            }
+        }
+
+        public async Task<List<Factura>> ObtenerFacturasGuardadasAsync()
+        {
+            var facturas = new List<Factura>();
+            using var conexion = new SqliteConnection($"Datasource={ruta}");
+            await conexion.OpenAsync();
+            var comando = conexion.CreateCommand();
+            comando.CommandText = "SELECT FacturaID, NombreFactura, FechaCreacion, Total FROM Factura ORDER BY FechaCreacion DESC";
+            
+            using var lector = await comando.ExecuteReaderAsync();
+            while (await lector.ReadAsync())
+            {
+                facturas.Add(new Factura
+                {
+                    FacturaID = lector.GetInt32(0),
+                    NombreFactura = lector.GetString(1),
+                    FechaCreacion = DateTime.Parse(lector.GetString(2), null, DateTimeStyles.RoundtripKind),
+                    Total = lector.GetDecimal(3)
+                });
+            }
+            return facturas;
+        }
+
+        public async Task<Factura> ObtenerDetalleFacturaAsync(int facturaID)
+        {
+            Factura factura = null;
+            using var conexion = new SqliteConnection($"Datasource={ruta}");
+            await conexion.OpenAsync();
+            
+            var cmdFactura = conexion.CreateCommand();
+            cmdFactura.CommandText = "SELECT FacturaID, NombreFactura, FechaCreacion, Total FROM Factura WHERE FacturaID = @ID";
+            cmdFactura.Parameters.AddWithValue("@ID", facturaID);
+            
+            using (var lectorF = await cmdFactura.ExecuteReaderAsync())
+            {
+                if (await lectorF.ReadAsync())
+                {
+                    factura = new Factura
+                    {
+                        FacturaID = lectorF.GetInt32(0),
+                        NombreFactura = lectorF.GetString(1),
+                        FechaCreacion = DateTime.Parse(lectorF.GetString(2), null, DateTimeStyles.RoundtripKind),
+                        Total = lectorF.GetDecimal(3)
+                    };
+                }
+            }
+
+            if (factura == null) return null; 
+
+            var cmdItems = conexion.CreateCommand();
+            cmdItems.CommandText = "SELECT Producto, Cantidad, PrecioUnitario FROM FacturaItemHistorico WHERE FacturaID = @ID";
+            cmdItems.Parameters.AddWithValue("@ID", facturaID);
+            
+            using (var lectorI = await cmdItems.ExecuteReaderAsync())
+            {
+                while (await lectorI.ReadAsync())
+                {
+                    factura.Items.Add(new FacturaItem
+                    {
+                        Producto = lectorI.GetString(0),
+                        Cantidad = lectorI.GetInt32(1),
+                        PrecioUnitario = lectorI.GetDecimal(2)
+                    });
+                }
+            }
+            return factura;
         }
     }
 }

@@ -19,10 +19,8 @@ namespace Facturar.Components.Servicio
         public async Task CargarDraftItemAsync()
         {
             DraftItem.Producto = await _servicioFactura.ObtenerValorConfig("DraftProducto");
-
             int.TryParse(await _servicioFactura.ObtenerValorConfig("DraftCantidad"), out int cantidad);
             DraftItem.Cantidad = cantidad > 0 ? cantidad : 1;
-
             decimal.TryParse(await _servicioFactura.ObtenerValorConfig("DraftPrecioUnitario"), out decimal precio);
             DraftItem.PrecioUnitario = precio > 0 ? precio : 0.01m;
         }
@@ -45,7 +43,6 @@ namespace Facturar.Components.Servicio
             {
                 await _servicioFactura.ActualizarItem(DraftItem);
             }
-
             DraftItem = new FacturaItem { Cantidad = 1, PrecioUnitario = 0.01m };
             await GuardarDraftItemAsync();
         }
@@ -81,6 +78,30 @@ namespace Facturar.Components.Servicio
         {
             var items = await this.ObtenerItems();
             return items.Any() ? items.Max(i => i.Identificador) + 1 : 1;
+        }
+
+        public async Task GuardarFacturaActualAsync(string nombreFactura, List<FacturaItem> itemsDraft)
+        {
+            if (string.IsNullOrWhiteSpace(nombreFactura))
+            {
+                throw new System.Exception("El nombre de la factura es obligatorio.");
+            }
+            if (!itemsDraft.Any())
+            {
+                throw new System.Exception("No se puede guardar una factura vacía.");
+            }
+
+            await _servicioFactura.GuardarFacturaCompletaAsync(nombreFactura, itemsDraft);
+        }
+
+        public async Task<List<Factura>> ObtenerFacturasGuardadasAsync()
+        {
+            return await _servicioFactura.ObtenerFacturasGuardadasAsync();
+        }
+
+        public async Task<Factura> ObtenerDetalleFacturaAsync(int facturaID)
+        {
+            return await _servicioFactura.ObtenerDetalleFacturaAsync(facturaID);
         }
     }
 }

@@ -33,6 +33,7 @@ conexion.Open();
 var comando = conexion.CreateCommand();
 
 comando.CommandText = @"
+    -- Tabla de borrador 
     CREATE TABLE IF NOT EXISTS
     FacturaItem(
         Identificador INTEGER,
@@ -41,9 +42,29 @@ comando.CommandText = @"
         PrecioUnitario REAL 
     );
 
-    -- Tabla de configuración (como en tu proyecto xx)
+    -- Tabla de configuración 
     CREATE TABLE IF NOT EXISTS
     configuracion( clave TEXT PRIMARY KEY, valor TEXT);
+
+    -- NUEVA: Tabla para guardar las facturas
+    CREATE TABLE IF NOT EXISTS
+    Factura(
+        FacturaID INTEGER PRIMARY KEY AUTOINCREMENT,
+        NombreFactura TEXT NOT NULL,
+        FechaCreacion TEXT NOT NULL,
+        Total REAL NOT NULL
+    );
+
+    --Tabla para guardar los items de las facturas guardadas
+    CREATE TABLE IF NOT EXISTS
+    FacturaItemHistorico(
+        ItemID INTEGER PRIMARY KEY AUTOINCREMENT,
+        FacturaID INTEGER NOT NULL,
+        Producto TEXT,
+        Cantidad INTEGER,
+        PrecioUnitario REAL,
+        FOREIGN KEY(FacturaID) REFERENCES Factura(FacturaID)
+    );
 
     -- Valores iniciales para el borrador del formulario
     INSERT OR IGNORE INTO configuracion (clave, valor) VALUES ('DraftProducto', '');

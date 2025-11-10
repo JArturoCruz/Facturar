@@ -3,6 +3,7 @@
 @using Facturar.Components.Servicio
 @rendermode InteractiveServer
 @inject ControladorFacturacion Controlador
+@inject NavigationManager Navigation
 
 <PageTitle>Facturador</PageTitle>
 
@@ -63,10 +64,23 @@ else
 
 
 <div class="card shadow-sm">
-    <div class="card-header">
-        <h3>Resumen de Factura</h3>
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3>Resumen de Factura Actual</h3>
+
+        @if (itemsFactura.Any())
+        {
+            <div class="d-flex">
+                <InputText @bind-Value="nombreFactura" class="form-control me-2" placeholder="Nombre de la factura" />
+                <button class="btn btn-success" @onclick="GuardarFactura">Guardar</button>
+            </div>
+        }
     </div>
     <div class="card-body">
+        @if (!string.IsNullOrWhiteSpace(errorAlGuardar))
+        {
+            <div class="alert alert-danger">@errorAlGuardar</div>
+        }
+
         @if (itemsFactura.Any())
         {
             <table class="table table-striped table-hover">
@@ -112,12 +126,23 @@ else
             <p class="text-center text-muted">Aún no hay productos en la factura.</p>
         }
     </div>
+    <ul>
+        <li>
+            <a href="/facturador">Crear nueva factura</a>
+        </li>
+        <li>
+            <a href="/facturas">Ver facturas guardadas</a>
+        </li>
+    </ul>
 </div>
 
 
 @code {
     private List<FacturaItem> itemsFactura = new List<FacturaItem>();
     private decimal TotalFactura => itemsFactura.Sum(item => item.Subtotal);
+
+    private string nombreFactura = string.Empty;
+    private string errorAlGuardar = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -148,5 +173,25 @@ else
     {
         await Controlador.CancelarEdicionAsync();
         StateHasChanged();
+    }
+    private async Task GuardarFactura()
+    {
+        errorAlGuardar = string.Empty;
+        try
+        {
+            await Controlador.GuardarFacturaActualAsync(nombreFactura, itemsFactura);
+
+            nombreFactura = string.Empty;
+            itemsFactura.Clear();
+            StateHasChanged();
+
+            Navigation.NavigateTo("/facturas");
+        }
+        catch (Exception ex)
+        {
+            errorAlGuardar = ex.Message;
+            StateHasChanged();
+        }
+
     }
 }

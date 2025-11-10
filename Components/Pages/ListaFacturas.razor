@@ -1,0 +1,58 @@
+﻿@page "/facturas"
+@using Facturar.Components.Data
+@using Facturar.Components.Servicio
+@rendermode InteractiveServer
+@inject ControladorFacturacion Controlador
+@inject NavigationManager Navigation
+
+<PageTitle>Facturas Guardadas</PageTitle>
+
+<h1>Facturas Guardadas</h1>
+
+@if (facturas == null)
+{
+    <p><em>Cargando facturas...</em></p>
+}
+else if (!facturas.Any())
+{
+    <p class="text-muted">No hay facturas guardadas.</p>
+}
+else
+{
+    <table class="table table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Nombre</th>
+                <th>Fecha de Creación</th>
+                <th>Total</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var f in facturas)
+            {
+                <tr>
+                    <td>@f.NombreFactura</td>
+                    <td>@f.FechaCreacion.ToLocalTime().ToString("g")</td>
+                    <td>@f.Total.ToString("C")</td>
+                    <td>
+                        <a href="/factura/@f.FacturaID" class="btn btn-primary btn-sm">
+                            Ver Detalles
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<a href="/facturador" class="btn btn-success">Crear Nueva Factura</a>
+
+@code {
+    private List<Factura> facturas;
+
+    protected override async Task OnInitializedAsync()
+    {
+        facturas = await Controlador.ObtenerFacturasGuardadasAsync();
+    }
+}
