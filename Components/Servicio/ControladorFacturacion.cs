@@ -15,18 +15,25 @@ namespace Facturar.Components.Servicio
         public int? FacturaIDEnModificacion { get; set; } = null;
         public string NombreFacturaEnModificacion { get; set; } = string.Empty;
 
+        public string NombreFacturaEnBorrador { get; set; } = string.Empty;
+
         public ControladorFacturacion(ServicioFactura servicioFacturacion)
         {
             _servicioFactura = servicioFacturacion;
         }
 
-        public async Task CargarDraftItemAsync()
+        public async Task CargarEstadoBorradorAsync()
         {
             DraftItem.Producto = await _servicioFactura.ObtenerValorConfig("DraftProducto");
             int.TryParse(await _servicioFactura.ObtenerValorConfig("DraftCantidad"), out int cantidad);
             DraftItem.Cantidad = cantidad > 0 ? cantidad : 1;
             decimal.TryParse(await _servicioFactura.ObtenerValorConfig("DraftPrecioUnitario"), out decimal precio);
             DraftItem.PrecioUnitario = precio > 0 ? precio : 0.01m;
+
+            NombreFacturaEnBorrador = await _servicioFactura.ObtenerValorConfig("DraftNombreFactura");
+
+            FacturaIDEnModificacion = int.TryParse(await _servicioFactura.ObtenerValorConfig("DraftModifyingID"), out int id) && id != 0 ? id : null;
+            NombreFacturaEnModificacion = await _servicioFactura.ObtenerValorConfig("DraftModifyingName");
         }
 
         public async Task GuardarDraftItemAsync()
@@ -34,6 +41,17 @@ namespace Facturar.Components.Servicio
             await _servicioFactura.GuardarValorConfig("DraftProducto", DraftItem.Producto ?? string.Empty);
             await _servicioFactura.GuardarValorConfig("DraftCantidad", DraftItem.Cantidad.ToString());
             await _servicioFactura.GuardarValorConfig("DraftPrecioUnitario", DraftItem.PrecioUnitario.ToString());
+        }
+
+        public async Task GuardarNombreFacturaEnBorradorAsync()
+        {
+            await _servicioFactura.GuardarValorConfig("DraftNombreFactura", NombreFacturaEnBorrador);
+        }
+
+        public async Task GuardarEstadoModificacionAsync()
+        {
+            await _servicioFactura.GuardarValorConfig("DraftModifyingID", FacturaIDEnModificacion?.ToString() ?? "0");
+            await _servicioFactura.GuardarValorConfig("DraftModifyingName", NombreFacturaEnModificacion);
         }
 
         public async Task GuardarCambiosDraftItemAsync()
@@ -98,6 +116,19 @@ namespace Facturar.Components.Servicio
             return items.Any() ? items.Max(i => i.Identificador) + 1 : 1;
         }
 
+        private async Task LimpiarConfigBorradorAsync()
+        {
+            DraftItem = new FacturaItem { Cantidad = 1, PrecioUnitario = 0.01m };
+            await GuardarDraftItemAsync();
+
+            NombreFacturaEnBorrador = "";
+            await GuardarNombreFacturaEnBorradorAsync();
+
+            FacturaIDEnModificacion = null;
+            NombreFacturaEnModificacion = "";
+            await GuardarEstadoModificacionAsync();
+        }
+
         public async Task GuardarFacturaActualAsync(string nombreFactura, List<FacturaItem> itemsDraft)
         {
             if (string.IsNullOrWhiteSpace(nombreFactura))
@@ -110,9 +141,7 @@ namespace Facturar.Components.Servicio
             }
 
             await _servicioFactura.GuardarFacturaCompletaAsync(nombreFactura, itemsDraft);
-
-            FacturaIDEnModificacion = null;
-            NombreFacturaEnModificacion = string.Empty;
+            await LimpiarConfigBorradorAsync();
         }
 
         public async Task ActualizarFacturaGuardadaAsync(int facturaID, string nombreFactura, List<FacturaItem> itemsDraft)
@@ -127,9 +156,7 @@ namespace Facturar.Components.Servicio
             }
 
             await _servicioFactura.ActualizarFacturaCompletaAsync(facturaID, nombreFactura, itemsDraft);
-
-            FacturaIDEnModificacion = null;
-            NombreFacturaEnModificacion = string.Empty;
+            await LimpiarConfigBorradorAsync();
         }
 
         public async Task<List<Factura>> ObtenerFacturasGuardadasAsync()
@@ -152,15 +179,10 @@ namespace Facturar.Components.Servicio
             await _servicioFactura.EliminarFacturaGuardadaAsync(facturaID);
         }
 
-        public async Task LimpiarBorradorCompletoAsync()
+        public async Task LimpiarEstadoBorradorAsync()
         {
             await _servicioFactura.LimpiarBorradorCompletoAsync();
-
-            DraftItem = new FacturaItem { Cantidad = 1, PrecioUnitario = 0.01m };
-            await this.GuardarDraftItemAsync();
-
-            FacturaIDEnModificacion = null;
-            NombreFacturaEnModificacion = string.Empty;
+            await LimpiarConfigBorradorAsync();
         }
     }
 }

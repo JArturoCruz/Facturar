@@ -74,6 +74,10 @@ else
         {
             Controlador.NombreFacturaEnModificacion = factura.NombreFactura;
             Controlador.FacturaIDEnModificacion = factura.FacturaID;
+            Controlador.NombreFacturaEnBorrador = factura.NombreFactura;
+
+            await Controlador.GuardarEstadoModificacionAsync();
+            await Controlador.GuardarNombreFacturaEnBorradorAsync();
 
             await Controlador.RecargarFacturaEnBorradorAsync(factura.FacturaID);
             Navigation.NavigateTo("/facturador");

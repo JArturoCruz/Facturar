@@ -86,7 +86,10 @@ else
         @if (itemsFactura.Any())
         {
             <div class="d-flex">
-                <InputText @bind-Value="nombreFactura" class="form-control me-2" placeholder="Nombre de la factura" />
+                <InputText @bind-Value="Controlador.NombreFacturaEnBorrador"
+                           @bind-Value:after="Controlador.GuardarNombreFacturaEnBorradorAsync"
+                           class="form-control me-2"
+                           placeholder="Nombre de la factura" />
 
                 @if (Controlador.FacturaIDEnModificacion.HasValue)
                 {
@@ -156,23 +159,12 @@ else
 @code {
     private List<FacturaItem> itemsFactura = new List<FacturaItem>();
     private decimal TotalFactura => itemsFactura.Sum(item => item.Subtotal);
-
-    private string nombreFactura = string.Empty;
     private string errorAlGuardar = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
-        await Controlador.CargarDraftItemAsync();
+        await Controlador.CargarEstadoBorradorAsync();
         itemsFactura = await Controlador.ObtenerItems();
-
-        if (Controlador.FacturaIDEnModificacion.HasValue)
-        {
-            nombreFactura = Controlador.NombreFacturaEnModificacion;
-        }
-        else
-        {
-            nombreFactura = string.Empty;
-        }
     }
 
     private async Task OnFormSubmit()
@@ -209,17 +201,16 @@ else
             {
                 await Controlador.ActualizarFacturaGuardadaAsync(
                     Controlador.FacturaIDEnModificacion.Value,
-                    nombreFactura,
+                    Controlador.NombreFacturaEnBorrador,
                     itemsFactura
                 );
             }
             else
             {
-                await Controlador.GuardarFacturaActualAsync(nombreFactura, itemsFactura);
+                await Controlador.GuardarFacturaActualAsync(Controlador.NombreFacturaEnBorrador, itemsFactura);
             }
 
-            nombreFactura = string.Empty;
-            itemsFactura.Clear();
+            itemsFactura = await Controlador.ObtenerItems();
             StateHasChanged();
 
             Navigation.NavigateTo("/facturas");
@@ -238,11 +229,10 @@ else
 
         if (confirmado)
         {
-            await Controlador.LimpiarBorradorCompletoAsync();
-            itemsFactura.Clear();
-            nombreFactura = string.Empty;
+            await Controlador.LimpiarEstadoBorradorAsync();
+            itemsFactura = await Controlador.ObtenerItems();
             errorAlGuardar = string.Empty;
             StateHasChanged();
         }
     }
-}   
+}

@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="Components\Pages\NoEncontrada.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="mibase.db" />
   </ItemGroup>
 
