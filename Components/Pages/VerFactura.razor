@@ -29,7 +29,7 @@
             <div class="row">
 
                 <div class="col">
-                    <strong>Fecha:</strong> @factura.FechaCreacion.ToLocalTime().ToString("g")
+                    <strong>Fecha:</strong> @factura.FechaCreacion.ToString("d")
                 </div>
                 <div class="col text-end">
                     <strong>Total:</strong> <span class="fs-5 fw-bold">@factura.Total.ToString("C")</span>

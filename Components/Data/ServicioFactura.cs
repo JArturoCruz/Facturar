@@ -110,7 +110,7 @@ namespace Facturar.Components.Data
             try
             {
                 var total = itemsDraft.Sum(i => i.Subtotal);
-                var fecha = fechaFactura.ToString("o");
+                var fecha = fechaFactura.ToString("yyyy-MM-dd HH:mm:ss");
 
                 var cmdFactura = conexion.CreateCommand();
                 cmdFactura.Transaction = transaccion;
@@ -176,7 +176,7 @@ namespace Facturar.Components.Data
                 {
                     FacturaID = lector.GetInt32(0),
                     NombreFactura = lector.GetString(1),
-                    FechaCreacion = DateTime.Parse(lector.GetString(2), null, DateTimeStyles.RoundtripKind),
+                    FechaCreacion = DateTime.Parse(lector.GetString(2)),
                     Total = lector.GetDecimal(3)
                 });
             }
@@ -193,16 +193,16 @@ namespace Facturar.Components.Data
             cmdFactura.CommandText = "SELECT FacturaID, NombreFactura, FechaCreacion, Total FROM Factura WHERE FacturaID = @ID";
             cmdFactura.Parameters.AddWithValue("@ID", facturaID);
 
-            using (var lectorF = await cmdFactura.ExecuteReaderAsync())
+            using (var lector = await cmdFactura.ExecuteReaderAsync())
             {
-                if (await lectorF.ReadAsync())
+                if (await lector.ReadAsync())
                 {
                     factura = new Factura
                     {
-                        FacturaID = lectorF.GetInt32(0),
-                        NombreFactura = lectorF.GetString(1),
-                        FechaCreacion = DateTime.Parse(lectorF.GetString(2), null, DateTimeStyles.RoundtripKind),
-                        Total = lectorF.GetDecimal(3)
+                        FacturaID = lector.GetInt32(0),
+                        NombreFactura = lector.GetString(1),
+                        FechaCreacion = DateTime.Parse(lector.GetString(2)),
+                        Total = lector.GetDecimal(3)
                     };
                 }
             }
@@ -294,7 +294,7 @@ namespace Facturar.Components.Data
             try
             {
                 var total = itemsDraft.Sum(i => i.Subtotal);
-                var fecha = fechaFactura.ToString("o");
+                var fecha = fechaFactura.ToString("yyyy-MM-dd HH:mm:ss");
 
                 var cmdFactura = conexion.CreateCommand();
                 cmdFactura.Transaction = transaccion;
@@ -401,7 +401,7 @@ namespace Facturar.Components.Data
                 {
                     FacturaID = lector.GetInt32(0),
                     NombreFactura = lector.GetString(1),
-                    FechaCreacion = DateTime.Parse(lector.GetString(2), null, DateTimeStyles.RoundtripKind),
+                    FechaCreacion = DateTime.Parse(lector.GetString(2)),
                     Total = lector.GetDecimal(3)
                 });
             }

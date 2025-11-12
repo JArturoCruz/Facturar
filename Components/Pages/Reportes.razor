@@ -73,7 +73,7 @@ else if (reporte != null)
                                                     <td>
                                                         <a href="/factura/@factura.FacturaID">@factura.NombreFactura</a>
                                                     </td>
-                                                    <td>@factura.FechaCreacion.ToLocalTime().ToString("g")</td>
+                                                    <td>@factura.FechaCreacion.ToString("d")</td>
                                                     <td>@factura.Total.ToString("C")</td>
                                                 </tr>
                                             }

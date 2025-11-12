@@ -15,7 +15,13 @@ namespace Facturar.Components.Servicio
         public FacturaItem DraftItem { get; set; } = new FacturaItem { Cantidad = 1, PrecioUnitario = 0.01m };
 
         public int? FacturaIDEnModificacion { get; set; } = null;
-        public DateTime FechaFacturaEnBorrador { get; set; } = DateTime.Today;
+
+        private DateTime _fechaFacturaEnBorrador = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Unspecified);
+        public DateTime FechaFacturaEnBorrador
+        {
+            get => _fechaFacturaEnBorrador;
+            set => _fechaFacturaEnBorrador = DateTime.SpecifyKind(value.Date, DateTimeKind.Unspecified);
+        }
 
         public ControladorFacturacion(ServicioFactura servicioFacturacion)
         {
@@ -52,7 +58,7 @@ namespace Facturar.Components.Servicio
 
         public async Task GuardarFechaFacturaEnBorradorAsync()
         {
-            await _servicioFactura.GuardarValorConfig("DraftFechaFactura", FechaFacturaEnBorrador.ToString("o"));
+            await _servicioFactura.GuardarValorConfig("DraftFechaFactura", FechaFacturaEnBorrador.ToString("yyyy-MM-dd"));
         }
 
         public async Task GuardarEstadoModificacionAsync()
