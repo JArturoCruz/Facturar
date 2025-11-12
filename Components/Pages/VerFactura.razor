@@ -27,13 +27,14 @@
     <div class="card shadow-sm">
         <div class="card-header">
             <div class="row">
-
-                <div class="col">
+                <div class="col-md-4">
+                    <strong>Usuario:</strong> @factura.NombreUsuario
+                </div>
+                <div class="col-md-4">
                     <strong>Fecha:</strong> @factura.FechaCreacion.ToString("d")
                 </div>
-                <div class="col text-end">
+                <div class="col-md-4 text-end">
                     <strong>Total:</strong> <span class="fs-5 fw-bold">@factura.Total.ToString("C")</span>
-
                 </div>
             </div>
         </div>
@@ -118,16 +119,18 @@ else
 
     private async Task RecargarFactura(Factura factura)
     {
-        var mensaje = $"¿Estás seguro de que quieres modificar la factura '{factura.NombreFactura}'?\n\n¡CUIDADO! Esto reemplazará tu factura actual en el borrador.";
+        var mensaje = $"¿Estás seguro de que quieres modificar la factura '{factura.NombreFactura}' para '{factura.NombreUsuario}'?\n\n¡CUIDADO! Esto reemplazará tu factura actual en el borrador.";
         bool confirmado = await JSRuntime.InvokeAsync<bool>("confirm", mensaje);
 
         if (confirmado)
         {
             Controlador.FacturaIDEnModificacion = factura.FacturaID;
             Controlador.FechaFacturaEnBorrador = factura.FechaCreacion;
+            Controlador.NombreUsuarioEnBorrador = factura.NombreUsuario;
 
             await Controlador.GuardarEstadoModificacionAsync();
             await Controlador.GuardarFechaFacturaEnBorradorAsync();
+            await Controlador.GuardarUsuarioEnBorradorAsync();
 
             await Controlador.RecargarFacturaEnBorradorAsync(factura.FacturaID);
             Navigation.NavigateTo("/facturador");
@@ -136,7 +139,7 @@ else
 
     private async Task EliminarFactura(Factura factura)
     {
-        var mensaje = $"¿Estás seguro de que quieres ELIMINAR PERMANENTEMENTE la factura '{factura.NombreFactura}'?\n\nEsta acción no se puede deshacer.";
+        var mensaje = $"¿Estás seguro de que quieres ELIMINAR PERMANENTEMENTE la factura '{factura.NombreFactura}' ('{factura.NombreUsuario}')?\n\nEsta acción no se puede deshacer.";
         bool confirmado = await JSRuntime.InvokeAsync<bool>("confirm", mensaje);
 
         if (confirmado)

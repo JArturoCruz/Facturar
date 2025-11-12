@@ -62,6 +62,7 @@ else if (reporte != null)
                                         <thead class="table-dark">
                                             <tr>
                                                 <th>Nº Factura</th>
+                                                <th>Usuario</th>
                                                 <th>Fecha</th>
                                                 <th>Total</th>
                                             </tr>
@@ -73,6 +74,7 @@ else if (reporte != null)
                                                     <td>
                                                         <a href="/factura/@factura.FacturaID">@factura.NombreFactura</a>
                                                     </td>
+                                                    <td>@factura.NombreUsuario</td>
                                                     <td>@factura.FechaCreacion.ToString("d")</td>
                                                     <td>@factura.Total.ToString("C")</td>
                                                 </tr>
@@ -80,7 +82,7 @@ else if (reporte != null)
                                         </tbody>
                                         <tfoot>
                                             <tr class="table-dark">
-                                                <td colspan="2" class="text-end fw-bold">Total @mes.NombreMes:</td>
+                                                <td colspan="3" class="text-end fw-bold">Total @mes.NombreMes:</td>
                                                 <td class="fw-bold">@mes.TotalMes.ToString("C")</td>
                                             </tr>
                                         </tfoot>

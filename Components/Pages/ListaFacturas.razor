@@ -24,8 +24,8 @@ else
         <thead class="table-dark">
             <tr>
                 <th>Nº Factura</th>
+                <th>Usuario</th>
                 <th>Fecha de Creación</th>
-
                 <th>Total</th>
                 <th>Acciones</th>
             </tr>
@@ -34,8 +34,8 @@ else
             @foreach (var f in facturas)
             {
                 <tr>
-
                     <td>@f.NombreFactura</td>
+                    <td>@f.NombreUsuario</td>
                     <td>@f.FechaCreacion.ToString("d")</td>
                     <td>@f.Total.ToString("C")</td>
                     <td>
@@ -71,16 +71,18 @@ else
 
     private async Task RecargarFactura(Factura factura)
     {
-        var mensaje = $"¿Estás seguro de que quieres modificar la factura '{factura.NombreFactura}'?\n\n¡CUIDADO! Esto reemplazará tu factura actual en el borrador.";
+        var mensaje = $"¿Estás seguro de que quieres modificar la factura '{factura.NombreFactura}' para '{factura.NombreUsuario}'?\n\n¡CUIDADO! Esto reemplazará tu factura actual en el borrador.";
         bool confirmado = await JSRuntime.InvokeAsync<bool>("confirm", mensaje);
 
         if (confirmado)
         {
             Controlador.FacturaIDEnModificacion = factura.FacturaID;
             Controlador.FechaFacturaEnBorrador = factura.FechaCreacion;
+            Controlador.NombreUsuarioEnBorrador = factura.NombreUsuario;
 
             await Controlador.GuardarEstadoModificacionAsync();
             await Controlador.GuardarFechaFacturaEnBorradorAsync();
+            await Controlador.GuardarUsuarioEnBorradorAsync();
 
             await Controlador.RecargarFacturaEnBorradorAsync(factura.FacturaID);
             Navigation.NavigateTo("/facturador");
@@ -89,7 +91,7 @@ else
 
     private async Task EliminarFactura(Factura factura)
     {
-        var mensaje = $"¿Estás seguro de que quieres ELIMINAR PERMANENTEMENTE la factura '{factura.NombreFactura}'?\n\nEsta acción no se puede deshacer.";
+        var mensaje = $"¿Estás seguro de que quieres ELIMINAR PERMANENTEMENTE la factura '{factura.NombreFactura}' ('{factura.NombreUsuario}')?\n\nEsta acción no se puede deshacer.";
         bool confirmado = await JSRuntime.InvokeAsync<bool>("confirm", mensaje);
 
         if (confirmado)
@@ -99,4 +101,4 @@ else
             StateHasChanged();
         }
     }
-}
+}   

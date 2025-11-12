@@ -1,7 +1,9 @@
+
 using Facturar.Components;
 using Facturar.Components.Data;
 using Facturar.Components.Servicio;
 using Microsoft.Data.Sqlite;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,7 +52,8 @@ comando.CommandText = @"
         FacturaID INTEGER PRIMARY KEY AUTOINCREMENT,
         NombreFactura TEXT NOT NULL,
         FechaCreacion TEXT NOT NULL,
-        Total REAL NOT NULL
+        Total REAL NOT NULL,
+        NombreUsuario TEXT NOT NULL DEFAULT ''
     );
 
     CREATE TABLE IF NOT EXISTS
@@ -69,6 +72,7 @@ comando.CommandText = @"
     
     INSERT OR IGNORE INTO configuracion (clave, valor) VALUES ('DraftModifyingID', '0');
     INSERT OR IGNORE INTO configuracion (clave, valor) VALUES ('DraftFechaFactura', '');
+    INSERT OR IGNORE INTO configuracion (clave, valor) VALUES ('DraftUsuario', '');
 ";
 comando.ExecuteNonQuery();
 conexion.Close();

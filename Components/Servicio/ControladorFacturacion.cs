@@ -23,6 +23,8 @@ namespace Facturar.Components.Servicio
             set => _fechaFacturaEnBorrador = DateTime.SpecifyKind(value.Date, DateTimeKind.Unspecified);
         }
 
+        public string NombreUsuarioEnBorrador { get; set; } = string.Empty;
+
         public ControladorFacturacion(ServicioFactura servicioFacturacion)
         {
             _servicioFactura = servicioFacturacion;
@@ -47,6 +49,8 @@ namespace Facturar.Components.Servicio
             {
                 FechaFacturaEnBorrador = DateTime.Today;
             }
+
+            NombreUsuarioEnBorrador = await _servicioFactura.ObtenerValorConfig("DraftUsuario");
         }
 
         public async Task GuardarDraftItemAsync()
@@ -59,6 +63,11 @@ namespace Facturar.Components.Servicio
         public async Task GuardarFechaFacturaEnBorradorAsync()
         {
             await _servicioFactura.GuardarValorConfig("DraftFechaFactura", FechaFacturaEnBorrador.ToString("yyyy-MM-dd"));
+        }
+
+        public async Task GuardarUsuarioEnBorradorAsync()
+        {
+            await _servicioFactura.GuardarValorConfig("DraftUsuario", NombreUsuarioEnBorrador ?? string.Empty);
         }
 
         public async Task GuardarEstadoModificacionAsync()
@@ -138,27 +147,38 @@ namespace Facturar.Components.Servicio
 
             FechaFacturaEnBorrador = DateTime.Today;
             await GuardarFechaFacturaEnBorradorAsync();
+
+            NombreUsuarioEnBorrador = "";
+            await GuardarUsuarioEnBorradorAsync();
         }
 
-        public async Task GuardarFacturaActualAsync(DateTime fechaFactura, List<FacturaItem> itemsDraft)
+        public async Task GuardarFacturaActualAsync(DateTime fechaFactura, string nombreUsuario, List<FacturaItem> itemsDraft)
         {
+            if (string.IsNullOrWhiteSpace(nombreUsuario))
+            {
+                throw new System.Exception("El nombre del usuario es obligatorio.");
+            }
             if (!itemsDraft.Any())
             {
                 throw new System.Exception("No se puede guardar una factura vacía.");
             }
 
-            await _servicioFactura.GuardarFacturaCompletaAsync(fechaFactura, itemsDraft);
+            await _servicioFactura.GuardarFacturaCompletaAsync(fechaFactura, nombreUsuario, itemsDraft);
             await LimpiarConfigBorradorAsync();
         }
 
-        public async Task ActualizarFacturaGuardadaAsync(int facturaID, DateTime fechaFactura, List<FacturaItem> itemsDraft)
+        public async Task ActualizarFacturaGuardadaAsync(int facturaID, DateTime fechaFactura, string nombreUsuario, List<FacturaItem> itemsDraft)
         {
+            if (string.IsNullOrWhiteSpace(nombreUsuario))
+            {
+                throw new System.Exception("El nombre del usuario es obligatorio.");
+            }
             if (!itemsDraft.Any())
             {
                 throw new System.Exception("No se puede guardar una factura vacía.");
             }
 
-            await _servicioFactura.ActualizarFacturaCompletaAsync(facturaID, fechaFactura, itemsDraft);
+            await _servicioFactura.ActualizarFacturaCompletaAsync(facturaID, fechaFactura, nombreUsuario, itemsDraft);
             await LimpiarConfigBorradorAsync();
         }
 

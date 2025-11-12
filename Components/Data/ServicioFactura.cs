@@ -101,7 +101,7 @@ namespace Facturar.Components.Data
             await comando.ExecuteNonQueryAsync();
         }
 
-        public async Task GuardarFacturaCompletaAsync(DateTime fechaFactura, List<FacturaItem> itemsDraft)
+        public async Task GuardarFacturaCompletaAsync(DateTime fechaFactura, string nombreUsuario, List<FacturaItem> itemsDraft)
         {
             using var conexion = new SqliteConnection($"Datasource={ruta}");
             await conexion.OpenAsync();
@@ -115,13 +115,14 @@ namespace Facturar.Components.Data
                 var cmdFactura = conexion.CreateCommand();
                 cmdFactura.Transaction = transaccion;
                 cmdFactura.CommandText = @"
-                    INSERT INTO Factura (NombreFactura, FechaCreacion, Total)
-                    VALUES (@NOMBRE, @FECHA, @TOTAL);
+                    INSERT INTO Factura (NombreFactura, FechaCreacion, Total, NombreUsuario)
+                    VALUES (@NOMBRE, @FECHA, @TOTAL, @USUARIO);
                     SELECT last_insert_rowid();
                 ";
                 cmdFactura.Parameters.AddWithValue("@NOMBRE", "TEMP_ID");
                 cmdFactura.Parameters.AddWithValue("@FECHA", fecha);
                 cmdFactura.Parameters.AddWithValue("@TOTAL", total);
+                cmdFactura.Parameters.AddWithValue("@USUARIO", nombreUsuario);
 
                 long nuevoFacturaID = (long)await cmdFactura.ExecuteScalarAsync();
 
@@ -167,7 +168,7 @@ namespace Facturar.Components.Data
             using var conexion = new SqliteConnection($"Datasource={ruta}");
             await conexion.OpenAsync();
             var comando = conexion.CreateCommand();
-            comando.CommandText = "SELECT FacturaID, NombreFactura, FechaCreacion, Total FROM Factura ORDER BY FechaCreacion DESC";
+            comando.CommandText = "SELECT FacturaID, NombreFactura, FechaCreacion, Total, NombreUsuario FROM Factura ORDER BY FechaCreacion DESC";
 
             using var lector = await comando.ExecuteReaderAsync();
             while (await lector.ReadAsync())
@@ -177,7 +178,8 @@ namespace Facturar.Components.Data
                     FacturaID = lector.GetInt32(0),
                     NombreFactura = lector.GetString(1),
                     FechaCreacion = DateTime.Parse(lector.GetString(2)),
-                    Total = lector.GetDecimal(3)
+                    Total = lector.GetDecimal(3),
+                    NombreUsuario = lector.GetString(4)
                 });
             }
             return facturas;
@@ -190,19 +192,20 @@ namespace Facturar.Components.Data
             await conexion.OpenAsync();
 
             var cmdFactura = conexion.CreateCommand();
-            cmdFactura.CommandText = "SELECT FacturaID, NombreFactura, FechaCreacion, Total FROM Factura WHERE FacturaID = @ID";
+            cmdFactura.CommandText = "SELECT FacturaID, NombreFactura, FechaCreacion, Total, NombreUsuario FROM Factura WHERE FacturaID = @ID";
             cmdFactura.Parameters.AddWithValue("@ID", facturaID);
 
-            using (var lector = await cmdFactura.ExecuteReaderAsync())
+            using (var lectorF = await cmdFactura.ExecuteReaderAsync())
             {
-                if (await lector.ReadAsync())
+                if (await lectorF.ReadAsync())
                 {
                     factura = new Factura
                     {
-                        FacturaID = lector.GetInt32(0),
-                        NombreFactura = lector.GetString(1),
-                        FechaCreacion = DateTime.Parse(lector.GetString(2)),
-                        Total = lector.GetDecimal(3)
+                        FacturaID = lectorF.GetInt32(0),
+                        NombreFactura = lectorF.GetString(1),
+                        FechaCreacion = DateTime.Parse(lectorF.GetString(2)),
+                        Total = lectorF.GetDecimal(3),
+                        NombreUsuario = lectorF.GetString(4)
                     };
                 }
             }
@@ -285,7 +288,7 @@ namespace Facturar.Components.Data
             }
         }
 
-        public async Task ActualizarFacturaCompletaAsync(int facturaID, DateTime fechaFactura, List<FacturaItem> itemsDraft)
+        public async Task ActualizarFacturaCompletaAsync(int facturaID, DateTime fechaFactura, string nombreUsuario, List<FacturaItem> itemsDraft)
         {
             using var conexion = new SqliteConnection($"Datasource={ruta}");
             await conexion.OpenAsync();
@@ -301,10 +304,12 @@ namespace Facturar.Components.Data
                 cmdFactura.CommandText = @"
                     UPDATE Factura 
                     SET FechaCreacion = @FECHA, 
-                        Total = @TOTAL
+                        Total = @TOTAL,
+                        NombreUsuario = @USUARIO
                     WHERE FacturaID = @ID";
                 cmdFactura.Parameters.AddWithValue("@FECHA", fecha);
                 cmdFactura.Parameters.AddWithValue("@TOTAL", total);
+                cmdFactura.Parameters.AddWithValue("@USUARIO", nombreUsuario);
                 cmdFactura.Parameters.AddWithValue("@ID", facturaID);
                 await cmdFactura.ExecuteNonQueryAsync();
 
@@ -388,7 +393,7 @@ namespace Facturar.Components.Data
             await conexion.OpenAsync();
             var comando = conexion.CreateCommand();
             comando.CommandText = @"
-                SELECT FacturaID, NombreFactura, FechaCreacion, Total 
+                SELECT FacturaID, NombreFactura, FechaCreacion, Total, NombreUsuario
                 FROM Factura 
                 WHERE strftime('%Y', FechaCreacion) = @ANIO
                 ORDER BY FechaCreacion";
@@ -402,7 +407,8 @@ namespace Facturar.Components.Data
                     FacturaID = lector.GetInt32(0),
                     NombreFactura = lector.GetString(1),
                     FechaCreacion = DateTime.Parse(lector.GetString(2)),
-                    Total = lector.GetDecimal(3)
+                    Total = lector.GetDecimal(3),
+                    NombreUsuario = lector.GetString(4)
                 });
             }
             return facturas;

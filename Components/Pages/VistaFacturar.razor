@@ -97,6 +97,11 @@ else
         @if (itemsFactura.Any())
         {
             <div class="d-flex align-items-center">
+                <InputText @bind-Value="Controlador.NombreUsuarioEnBorrador"
+                           @bind-Value:after="Controlador.GuardarUsuarioEnBorradorAsync"
+                           class="form-control me-2"
+                           placeholder="Nombre de Usuario" />
+
                 <InputDate @bind-Value="Controlador.FechaFacturaEnBorrador"
                            @bind-Value:after="Controlador.GuardarFechaFacturaEnBorradorAsync"
                            class="form-control me-2" style="min-width: 150px;" />
@@ -223,6 +228,7 @@ else
                 await Controlador.ActualizarFacturaGuardadaAsync(
                     Controlador.FacturaIDEnModificacion.Value,
                     Controlador.FechaFacturaEnBorrador,
+                    Controlador.NombreUsuarioEnBorrador,
 
 itemsFactura
                 );
@@ -231,6 +237,7 @@ itemsFactura
             {
                 await Controlador.GuardarFacturaActualAsync(
                     Controlador.FechaFacturaEnBorrador,
+                    Controlador.NombreUsuarioEnBorrador,
                     itemsFactura
                 );
             }
