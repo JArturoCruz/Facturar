@@ -386,7 +386,7 @@ namespace Facturar.Components.Data
             await comando.ExecuteNonQueryAsync();
         }
 
-        public async Task<List<Factura>> ObtenerFacturasPorAnioAsync(int anio)
+        public async Task<List<Factura>> ObtenerFacturasPorAnioAsync(int anio, string nombreUsuario)
         {
             var facturas = new List<Factura>();
             using var conexion = new SqliteConnection($"Datasource={ruta}");
@@ -395,9 +395,10 @@ namespace Facturar.Components.Data
             comando.CommandText = @"
                 SELECT FacturaID, NombreFactura, FechaCreacion, Total, NombreUsuario
                 FROM Factura 
-                WHERE strftime('%Y', FechaCreacion) = @ANIO
+                WHERE strftime('%Y', FechaCreacion) = @ANIO AND NombreUsuario = @USUARIO
                 ORDER BY FechaCreacion";
             comando.Parameters.AddWithValue("@ANIO", anio.ToString());
+            comando.Parameters.AddWithValue("@USUARIO", nombreUsuario);
 
             using var lector = await comando.ExecuteReaderAsync();
             while (await lector.ReadAsync())

@@ -208,9 +208,14 @@ namespace Facturar.Components.Servicio
             await LimpiarConfigBorradorAsync();
         }
 
-        public async Task<ReporteAnual> GenerarReporteAnualAsync(int anio)
+        public async Task<ReporteAnual> GenerarReporteAnualAsync(int anio, string nombreUsuario)
         {
-            var facturas = await _servicioFactura.ObtenerFacturasPorAnioAsync(anio);
+            if (string.IsNullOrWhiteSpace(nombreUsuario))
+            {
+                throw new System.Exception("El nombre del usuario es obligatorio para generar el reporte.");
+            }
+
+            var facturas = await _servicioFactura.ObtenerFacturasPorAnioAsync(anio, nombreUsuario);
             var reporte = new ReporteAnual { Anio = anio };
             var facturasPorMes = facturas.GroupBy(f => f.FechaCreacion.Month)
                                          .ToDictionary(g => g.Key, g => g.ToList());

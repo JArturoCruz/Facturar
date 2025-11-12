@@ -8,7 +8,7 @@
 <PageTitle>Reporte Anual</PageTitle>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1>Reporte Anual</h1>
+    <h1>Reporte Anual por Usuario</h1>
     <div>
         <a href="/" class="btn btn-secondary">Volver al Inicio</a>
     </div>
@@ -17,6 +17,12 @@
 <div class="card shadow-sm mb-4">
     <div class="card-body">
         <div class="row g-3 align-items-center">
+            <div class="col-auto">
+                <label for="usuario" class="col-form-label">Usuario:</label>
+            </div>
+            <div class="col-auto">
+                <InputText id="usuario" class="form-control" @bind-Value="nombreUsuarioParaBuscar" />
+            </div>
             <div class="col-auto">
                 <label for="anio" class="col-form-label">Año:</label>
             </div>
@@ -34,16 +40,20 @@
 {
     <p><em>Generando reporte...</em></p>
 }
+else if (!string.IsNullOrWhiteSpace(errorEnReporte))
+{
+    <div class="alert alert-danger">@errorEnReporte</div>
+}
 else if (reporte != null)
 {
     <div class="card shadow-sm">
         <div class="card-header">
-            <h2 class="mb-0">Reporte del Año: @reporte.Anio</h2>
+            <h2 class="mb-0">Reporte del Año: @reporte.Anio (Usuario: @nombreUsuarioParaBuscar)</h2>
         </div>
         <div class="card-body">
             @if (!reporte.Meses.Any(m => m.Facturas.Any()))
             {
-                <p class="text-muted">No se encontraron facturas para el año @reporte.Anio.</p>
+                <p class="text-muted">No se encontraron facturas para <strong>@nombreUsuarioParaBuscar</strong> en el año @reporte.Anio.</p>
             }
             else
             {
@@ -62,7 +72,6 @@ else if (reporte != null)
                                         <thead class="table-dark">
                                             <tr>
                                                 <th>Nº Factura</th>
-                                                <th>Usuario</th>
                                                 <th>Fecha</th>
                                                 <th>Total</th>
                                             </tr>
@@ -74,7 +83,6 @@ else if (reporte != null)
                                                     <td>
                                                         <a href="/factura/@factura.FacturaID">@factura.NombreFactura</a>
                                                     </td>
-                                                    <td>@factura.NombreUsuario</td>
                                                     <td>@factura.FechaCreacion.ToString("d")</td>
                                                     <td>@factura.Total.ToString("C")</td>
                                                 </tr>
@@ -82,7 +90,7 @@ else if (reporte != null)
                                         </tbody>
                                         <tfoot>
                                             <tr class="table-dark">
-                                                <td colspan="3" class="text-end fw-bold">Total @mes.NombreMes:</td>
+                                                <td colspan="2" class="text-end fw-bold">Total @mes.NombreMes:</td>
                                                 <td class="fw-bold">@mes.TotalMes.ToString("C")</td>
                                             </tr>
                                         </tfoot>
@@ -105,16 +113,27 @@ else if (reporte != null)
 
 @code {
     private int anioParaBuscar = DateTime.Today.Year;
+    private string nombreUsuarioParaBuscar = string.Empty;
     private ReporteAnual reporte;
     private bool cargando = false;
+    private string errorEnReporte = string.Empty;
 
     private async Task HandleGenerarReporte()
     {
         cargando = true;
         reporte = null;
+        errorEnReporte = string.Empty;
         StateHasChanged();
 
-        reporte = await Controlador.GenerarReporteAnualAsync(anioParaBuscar);
+        try
+        {
+            reporte = await Controlador.GenerarReporteAnualAsync(anioParaBuscar, nombreUsuarioParaBuscar);
+        }
+        catch (Exception ex)
+        {
+            errorEnReporte = ex.Message;
+        }
+
         cargando = false;
         StateHasChanged();
     }
