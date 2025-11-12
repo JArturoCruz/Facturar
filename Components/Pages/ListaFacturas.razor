@@ -10,11 +10,12 @@
 
 <h1>Facturas Guardadas</h1>
 
-<div class="mb-3">
-    <input @bind-value="filtroUsuario"
-           @bind-value:event="oninput"
+<div class="input-group mb-3">
+    <input value="@Controlador.FiltroListaFacturas"
+           @oninput="OnFiltroUsuarioChanged"
            class="form-control"
            placeholder="Buscar por nombre de usuario..." />
+    <button class="btn btn-outline-secondary" type="button" @onclick="LimpiarFiltro">Limpiar</button>
 </div>
 
 @if (todasLasFacturas == null)
@@ -71,7 +72,6 @@ else
 
 @code {
     private List<Factura> todasLasFacturas;
-    private string filtroUsuario = string.Empty;
 
     private List<Factura> FacturasFiltradas
     {
@@ -81,19 +81,32 @@ else
             {
                 return new List<Factura>();
             }
-            if (string.IsNullOrWhiteSpace(filtroUsuario))
+            if (string.IsNullOrWhiteSpace(Controlador.FiltroListaFacturas))
             {
                 return todasLasFacturas;
             }
             return todasLasFacturas
-                .Where(f => f.NombreUsuario.Contains(filtroUsuario, StringComparison.OrdinalIgnoreCase))
+                .Where(f => f.NombreUsuario.Contains(Controlador.FiltroListaFacturas, StringComparison.OrdinalIgnoreCase))
                 .ToList();
         }
     }
 
     protected override async Task OnInitializedAsync()
     {
+        await Controlador.CargarFiltroListaFacturasAsync();
         todasLasFacturas = await Controlador.ObtenerFacturasGuardadasAsync();
+    }
+
+    private async Task OnFiltroUsuarioChanged(ChangeEventArgs e)
+    {
+        string nuevoFiltro = e.Value?.ToString() ?? string.Empty;
+        await Controlador.GuardarFiltroListaFacturasAsync(nuevoFiltro);
+    }
+
+    private async Task LimpiarFiltro()
+    {
+        await Controlador.GuardarFiltroListaFacturasAsync(string.Empty);
+        StateHasChanged();
     }
 
     private async Task RecargarFactura(Factura factura)

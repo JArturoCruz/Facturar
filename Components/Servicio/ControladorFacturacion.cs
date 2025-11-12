@@ -25,6 +25,9 @@ namespace Facturar.Components.Servicio
 
         public string NombreUsuarioEnBorrador { get; set; } = string.Empty;
 
+        public string FiltroListaFacturas { get; set; } = string.Empty;
+        private bool haCargadoFiltroLista = false;
+
         public ControladorFacturacion(ServicioFactura servicioFacturacion)
         {
             _servicioFactura = servicioFacturacion;
@@ -53,6 +56,13 @@ namespace Facturar.Components.Servicio
             NombreUsuarioEnBorrador = await _servicioFactura.ObtenerValorConfig("DraftUsuario");
         }
 
+        public async Task CargarFiltroListaFacturasAsync()
+        {
+            if (haCargadoFiltroLista) return;
+            FiltroListaFacturas = await _servicioFactura.ObtenerValorConfig("FiltroListaFacturas");
+            haCargadoFiltroLista = true;
+        }
+
         public async Task GuardarDraftItemAsync()
         {
             await _servicioFactura.GuardarValorConfig("DraftProducto", DraftItem.Producto ?? string.Empty);
@@ -73,6 +83,12 @@ namespace Facturar.Components.Servicio
         public async Task GuardarEstadoModificacionAsync()
         {
             await _servicioFactura.GuardarValorConfig("DraftModifyingID", FacturaIDEnModificacion?.ToString() ?? "0");
+        }
+
+        public async Task GuardarFiltroListaFacturasAsync(string filtro)
+        {
+            this.FiltroListaFacturas = filtro;
+            await _servicioFactura.GuardarValorConfig("FiltroListaFacturas", filtro ?? string.Empty);
         }
 
         public async Task GuardarCambiosDraftItemAsync()

@@ -1,9 +1,7 @@
-
-using Facturar.Components;
 using Facturar.Components.Data;
 using Facturar.Components.Servicio;
+using Facturar.Components;
 using Microsoft.Data.Sqlite;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -73,8 +71,10 @@ comando.CommandText = @"
     INSERT OR IGNORE INTO configuracion (clave, valor) VALUES ('DraftModifyingID', '0');
     INSERT OR IGNORE INTO configuracion (clave, valor) VALUES ('DraftFechaFactura', '');
     INSERT OR IGNORE INTO configuracion (clave, valor) VALUES ('DraftUsuario', '');
+    INSERT OR IGNORE INTO configuracion (clave, valor) VALUES ('FiltroListaFacturas', '');
 ";
 comando.ExecuteNonQuery();
 conexion.Close();
 
 app.Run();
+
