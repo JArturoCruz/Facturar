@@ -1,8 +1,10 @@
 ﻿using Facturar.Components.Data;
+using Facturar.Components.Data.Reportes;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System;
+using System.Globalization;
 
 namespace Facturar.Components.Servicio
 {
@@ -13,9 +15,7 @@ namespace Facturar.Components.Servicio
         public FacturaItem DraftItem { get; set; } = new FacturaItem { Cantidad = 1, PrecioUnitario = 0.01m };
 
         public int? FacturaIDEnModificacion { get; set; } = null;
-        public string NombreFacturaEnModificacion { get; set; } = string.Empty;
-
-        public string NombreFacturaEnBorrador { get; set; } = string.Empty;
+        public DateTime FechaFacturaEnBorrador { get; set; } = DateTime.Today;
 
         public ControladorFacturacion(ServicioFactura servicioFacturacion)
         {
@@ -30,10 +30,17 @@ namespace Facturar.Components.Servicio
             decimal.TryParse(await _servicioFactura.ObtenerValorConfig("DraftPrecioUnitario"), out decimal precio);
             DraftItem.PrecioUnitario = precio > 0 ? precio : 0.01m;
 
-            NombreFacturaEnBorrador = await _servicioFactura.ObtenerValorConfig("DraftNombreFactura");
-
             FacturaIDEnModificacion = int.TryParse(await _servicioFactura.ObtenerValorConfig("DraftModifyingID"), out int id) && id != 0 ? id : null;
-            NombreFacturaEnModificacion = await _servicioFactura.ObtenerValorConfig("DraftModifyingName");
+
+            var fechaGuardada = await _servicioFactura.ObtenerValorConfig("DraftFechaFactura");
+            if (DateTime.TryParse(fechaGuardada, out DateTime fecha))
+            {
+                FechaFacturaEnBorrador = fecha;
+            }
+            else
+            {
+                FechaFacturaEnBorrador = DateTime.Today;
+            }
         }
 
         public async Task GuardarDraftItemAsync()
@@ -43,15 +50,14 @@ namespace Facturar.Components.Servicio
             await _servicioFactura.GuardarValorConfig("DraftPrecioUnitario", DraftItem.PrecioUnitario.ToString());
         }
 
-        public async Task GuardarNombreFacturaEnBorradorAsync()
+        public async Task GuardarFechaFacturaEnBorradorAsync()
         {
-            await _servicioFactura.GuardarValorConfig("DraftNombreFactura", NombreFacturaEnBorrador);
+            await _servicioFactura.GuardarValorConfig("DraftFechaFactura", FechaFacturaEnBorrador.ToString("o"));
         }
 
         public async Task GuardarEstadoModificacionAsync()
         {
             await _servicioFactura.GuardarValorConfig("DraftModifyingID", FacturaIDEnModificacion?.ToString() ?? "0");
-            await _servicioFactura.GuardarValorConfig("DraftModifyingName", NombreFacturaEnModificacion);
         }
 
         public async Task GuardarCambiosDraftItemAsync()
@@ -121,41 +127,32 @@ namespace Facturar.Components.Servicio
             DraftItem = new FacturaItem { Cantidad = 1, PrecioUnitario = 0.01m };
             await GuardarDraftItemAsync();
 
-            NombreFacturaEnBorrador = "";
-            await GuardarNombreFacturaEnBorradorAsync();
-
             FacturaIDEnModificacion = null;
-            NombreFacturaEnModificacion = "";
             await GuardarEstadoModificacionAsync();
+
+            FechaFacturaEnBorrador = DateTime.Today;
+            await GuardarFechaFacturaEnBorradorAsync();
         }
 
-        public async Task GuardarFacturaActualAsync(string nombreFactura, List<FacturaItem> itemsDraft)
+        public async Task GuardarFacturaActualAsync(DateTime fechaFactura, List<FacturaItem> itemsDraft)
         {
-            if (string.IsNullOrWhiteSpace(nombreFactura))
-            {
-                throw new System.Exception("El nombre de la factura es obligatorio.");
-            }
             if (!itemsDraft.Any())
             {
                 throw new System.Exception("No se puede guardar una factura vacía.");
             }
 
-            await _servicioFactura.GuardarFacturaCompletaAsync(nombreFactura, itemsDraft);
+            await _servicioFactura.GuardarFacturaCompletaAsync(fechaFactura, itemsDraft);
             await LimpiarConfigBorradorAsync();
         }
 
-        public async Task ActualizarFacturaGuardadaAsync(int facturaID, string nombreFactura, List<FacturaItem> itemsDraft)
+        public async Task ActualizarFacturaGuardadaAsync(int facturaID, DateTime fechaFactura, List<FacturaItem> itemsDraft)
         {
-            if (string.IsNullOrWhiteSpace(nombreFactura))
-            {
-                throw new System.Exception("El nombre de la factura es obligatorio.");
-            }
             if (!itemsDraft.Any())
             {
                 throw new System.Exception("No se puede guardar una factura vacía.");
             }
 
-            await _servicioFactura.ActualizarFacturaCompletaAsync(facturaID, nombreFactura, itemsDraft);
+            await _servicioFactura.ActualizarFacturaCompletaAsync(facturaID, fechaFactura, itemsDraft);
             await LimpiarConfigBorradorAsync();
         }
 
@@ -183,6 +180,33 @@ namespace Facturar.Components.Servicio
         {
             await _servicioFactura.LimpiarBorradorCompletoAsync();
             await LimpiarConfigBorradorAsync();
+        }
+
+        public async Task<ReporteAnual> GenerarReporteAnualAsync(int anio)
+        {
+            var facturas = await _servicioFactura.ObtenerFacturasPorAnioAsync(anio);
+            var reporte = new ReporteAnual { Anio = anio };
+            var facturasPorMes = facturas.GroupBy(f => f.FechaCreacion.Month)
+                                         .ToDictionary(g => g.Key, g => g.ToList());
+
+            for (int i = 1; i <= 12; i++)
+            {
+                var nombreMes = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(i);
+                var reporteMes = new ReporteMes
+                {
+                    NumeroMes = i,
+                    NombreMes = nombreMes.Substring(0, 1).ToUpper() + nombreMes.Substring(1)
+                };
+
+                if (facturasPorMes.ContainsKey(i))
+                {
+                    reporteMes.Facturas = facturasPorMes[i];
+                }
+
+                reporte.Meses.Add(reporteMes);
+            }
+
+            return reporte;
         }
     }
 }

@@ -16,6 +16,7 @@
             <button class="btn btn-warning me-2" @onclick="() => RecargarFactura(factura)">
                 Modificar esta Factura
             </button>
+
             <button class="btn btn-danger me-2" @onclick="() => EliminarFactura(factura)">
                 Eliminar
             </button>
@@ -26,11 +27,13 @@
     <div class="card shadow-sm">
         <div class="card-header">
             <div class="row">
+
                 <div class="col">
                     <strong>Fecha:</strong> @factura.FechaCreacion.ToLocalTime().ToString("g")
                 </div>
                 <div class="col text-end">
                     <strong>Total:</strong> <span class="fs-5 fw-bold">@factura.Total.ToString("C")</span>
+
                 </div>
             </div>
         </div>
@@ -39,28 +42,34 @@
             <table class="table table-striped">
                 <thead class="table-dark">
                     <tr>
+
                         <th>Producto</th>
                         <th>Cantidad</th>
                         <th>Precio Unitario</th>
                         <th>Subtotal</th>
+
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var item in factura.Items)
                     {
+
                         <tr>
                             <td>@item.Producto</td>
                             <td>@item.Cantidad</td>
                             <td>@item.PrecioUnitario.ToString("C")</td>
+
                             <td>@item.Subtotal.ToString("C")</td>
                         </tr>
                     }
                 </tbody>
+
                 <tfoot>
                     <tr class="table-light">
                         <td colspan="3" class="text-end fw-bold">TOTAL:</td>
                         <td class="fw-bold">@factura.Total.ToString("C")</td>
                     </tr>
+
                 </tfoot>
             </table>
         </div>
@@ -73,6 +82,7 @@ else if (facturaNoEncontrada)
         <p>No se pudo encontrar una factura con el ID <strong>@FacturaID</strong>.</p>
         <hr>
         <p class="mb-0">
+
             <a href="/facturas" class="btn btn-secondary">Volver a la lista de facturas</a>
         </p>
     </div>
@@ -85,11 +95,14 @@ else
 
 @code {
     [Parameter]
-    public int FacturaID { get; set; }
+    public int FacturaID
+    {
+        get;
+        set;
+    }
 
     private Factura factura;
     private bool facturaNoEncontrada = false;
-
     protected override async Task OnParametersSetAsync()
     {
         factura = null;
@@ -110,12 +123,11 @@ else
 
         if (confirmado)
         {
-            Controlador.NombreFacturaEnModificacion = factura.NombreFactura;
             Controlador.FacturaIDEnModificacion = factura.FacturaID;
-            Controlador.NombreFacturaEnBorrador = factura.NombreFactura;
+            Controlador.FechaFacturaEnBorrador = factura.FechaCreacion;
 
             await Controlador.GuardarEstadoModificacionAsync();
-            await Controlador.GuardarNombreFacturaEnBorradorAsync();
+            await Controlador.GuardarFechaFacturaEnBorradorAsync();
 
             await Controlador.RecargarFacturaEnBorradorAsync(factura.FacturaID);
             Navigation.NavigateTo("/facturador");
@@ -133,4 +145,4 @@ else
             Navigation.NavigateTo("/facturas");
         }
     }
-}   
+}

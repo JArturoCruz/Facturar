@@ -101,27 +101,16 @@ namespace Facturar.Components.Data
             await comando.ExecuteNonQueryAsync();
         }
 
-        public async Task GuardarFacturaCompletaAsync(string nombreFactura, List<FacturaItem> itemsDraft)
+        public async Task GuardarFacturaCompletaAsync(DateTime fechaFactura, List<FacturaItem> itemsDraft)
         {
             using var conexion = new SqliteConnection($"Datasource={ruta}");
             await conexion.OpenAsync();
-
-            var cmdValidar = conexion.CreateCommand();
-            cmdValidar.CommandText = "SELECT 1 FROM Factura WHERE NombreFactura = @NOMBRE LIMIT 1";
-            cmdValidar.Parameters.AddWithValue("@NOMBRE", nombreFactura);
-
-            var existe = await cmdValidar.ExecuteScalarAsync();
-            if (existe != null)
-            {
-                throw new System.Exception("Error: Ya existe una factura con ese nombre. Por favor, elige otro.");
-            }
-
             using var transaccion = conexion.BeginTransaction();
 
             try
             {
                 var total = itemsDraft.Sum(i => i.Subtotal);
-                var fecha = DateTime.UtcNow.ToString("o");
+                var fecha = fechaFactura.ToString("o");
 
                 var cmdFactura = conexion.CreateCommand();
                 cmdFactura.Transaction = transaccion;
@@ -130,11 +119,18 @@ namespace Facturar.Components.Data
                     VALUES (@NOMBRE, @FECHA, @TOTAL);
                     SELECT last_insert_rowid();
                 ";
-                cmdFactura.Parameters.AddWithValue("@NOMBRE", nombreFactura);
+                cmdFactura.Parameters.AddWithValue("@NOMBRE", "TEMP_ID");
                 cmdFactura.Parameters.AddWithValue("@FECHA", fecha);
                 cmdFactura.Parameters.AddWithValue("@TOTAL", total);
 
                 long nuevoFacturaID = (long)await cmdFactura.ExecuteScalarAsync();
+
+                var cmdUpdateName = conexion.CreateCommand();
+                cmdUpdateName.Transaction = transaccion;
+                cmdUpdateName.CommandText = "UPDATE Factura SET NombreFactura = @NOMBRE WHERE FacturaID = @ID";
+                cmdUpdateName.Parameters.AddWithValue("@NOMBRE", nuevoFacturaID.ToString());
+                cmdUpdateName.Parameters.AddWithValue("@ID", nuevoFacturaID);
+                await cmdUpdateName.ExecuteNonQueryAsync();
 
                 foreach (var item in itemsDraft)
                 {
@@ -289,37 +285,24 @@ namespace Facturar.Components.Data
             }
         }
 
-        public async Task ActualizarFacturaCompletaAsync(int facturaID, string nombreFactura, List<FacturaItem> itemsDraft)
+        public async Task ActualizarFacturaCompletaAsync(int facturaID, DateTime fechaFactura, List<FacturaItem> itemsDraft)
         {
             using var conexion = new SqliteConnection($"Datasource={ruta}");
             await conexion.OpenAsync();
-
-            var cmdValidar = conexion.CreateCommand();
-            cmdValidar.CommandText = "SELECT 1 FROM Factura WHERE NombreFactura = @NOMBRE AND FacturaID != @ID LIMIT 1";
-            cmdValidar.Parameters.AddWithValue("@NOMBRE", nombreFactura);
-            cmdValidar.Parameters.AddWithValue("@ID", facturaID);
-
-            var existe = await cmdValidar.ExecuteScalarAsync();
-            if (existe != null)
-            {
-                throw new System.Exception("Error: Ya existe OTRA factura con ese nombre. Por favor, elige otro.");
-            }
 
             using var transaccion = conexion.BeginTransaction();
             try
             {
                 var total = itemsDraft.Sum(i => i.Subtotal);
-                var fecha = DateTime.UtcNow.ToString("o");
+                var fecha = fechaFactura.ToString("o");
 
                 var cmdFactura = conexion.CreateCommand();
                 cmdFactura.Transaction = transaccion;
                 cmdFactura.CommandText = @"
                     UPDATE Factura 
-                    SET NombreFactura = @NOMBRE, 
-                        FechaCreacion = @FECHA, 
+                    SET FechaCreacion = @FECHA, 
                         Total = @TOTAL
                     WHERE FacturaID = @ID";
-                cmdFactura.Parameters.AddWithValue("@NOMBRE", nombreFactura);
                 cmdFactura.Parameters.AddWithValue("@FECHA", fecha);
                 cmdFactura.Parameters.AddWithValue("@TOTAL", total);
                 cmdFactura.Parameters.AddWithValue("@ID", facturaID);
@@ -396,6 +379,33 @@ namespace Facturar.Components.Data
             var comando = conexion.CreateCommand();
             comando.CommandText = "DELETE FROM FacturaItem";
             await comando.ExecuteNonQueryAsync();
+        }
+
+        public async Task<List<Factura>> ObtenerFacturasPorAnioAsync(int anio)
+        {
+            var facturas = new List<Factura>();
+            using var conexion = new SqliteConnection($"Datasource={ruta}");
+            await conexion.OpenAsync();
+            var comando = conexion.CreateCommand();
+            comando.CommandText = @"
+                SELECT FacturaID, NombreFactura, FechaCreacion, Total 
+                FROM Factura 
+                WHERE strftime('%Y', FechaCreacion) = @ANIO
+                ORDER BY FechaCreacion";
+            comando.Parameters.AddWithValue("@ANIO", anio.ToString());
+
+            using var lector = await comando.ExecuteReaderAsync();
+            while (await lector.ReadAsync())
+            {
+                facturas.Add(new Factura
+                {
+                    FacturaID = lector.GetInt32(0),
+                    NombreFactura = lector.GetString(1),
+                    FechaCreacion = DateTime.Parse(lector.GetString(2), null, DateTimeStyles.RoundtripKind),
+                    Total = lector.GetDecimal(3)
+                });
+            }
+            return facturas;
         }
     }
 }

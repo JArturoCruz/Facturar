@@ -11,7 +11,7 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     @if (Controlador.FacturaIDEnModificacion.HasValue)
     {
-        <h1>Modificando Factura</h1>
+        <h1>Modificando Factura: @Controlador.FacturaIDEnModificacion</h1>
     }
     else
     {
@@ -25,7 +25,8 @@
 </div>
 
 
-@if (Controlador != null && Controlador.DraftItem != null)
+@if (Controlador != null && Controlador.DraftItem !=
+null)
 {
     <div class="card shadow-sm mb-4">
         <div class="card-header">
@@ -34,6 +35,7 @@
         <div class="card-body">
             <EditForm Model="Controlador.DraftItem" OnValidSubmit="OnFormSubmit">
                 <DataAnnotationsValidator />
+
 
                 <div class="mb-3">
                     <label for="producto" class="form-label">Producto:</label>
@@ -45,6 +47,7 @@
 
                 <div class="row mb-3">
                     <div class="col-md-6">
+
                         <label for="cantidad" class="form-label">Cantidad:</label>
                         <InputNumber id="cantidad" class="form-control"
                                      @bind-Value="Controlador.DraftItem.Cantidad"
@@ -52,6 +55,7 @@
                         <ValidationMessage For="() => Controlador.DraftItem.Cantidad" />
                     </div>
                     <div class="col-md-6">
+
                         <label for="precio" class="form-label">Precio Unitario:</label>
                         <InputNumber id="precio" class="form-control"
                                      @bind-Value="Controlador.DraftItem.PrecioUnitario"
@@ -61,11 +65,13 @@
                 </div>
 
                 @if (Controlador.DraftItem.Identificador == 0)
+
                 {
                     <button type="submit" class="btn btn-primary">Agregar Producto</button>
                 }
                 else
                 {
+
                     <button type="submit" class="btn btn-success">Actualizar Producto</button>
                     <button type="button" class="btn btn-secondary ms-2" @onclick="CancelarEdicion">Cancelar</button>
                 }
@@ -83,17 +89,18 @@ else
     <div class="card-header d-flex justify-content-between align-items-center">
         <h3>Resumen de Factura Actual</h3>
 
+
         @if (itemsFactura.Any())
         {
-            <div class="d-flex">
-                <InputText @bind-Value="Controlador.NombreFacturaEnBorrador"
-                           @bind-Value:after="Controlador.GuardarNombreFacturaEnBorradorAsync"
-                           class="form-control me-2"
-                           placeholder="Nombre de la factura" />
+            <div class="d-flex align-items-center">
+                <InputDate @bind-Value="Controlador.FechaFacturaEnBorrador"
+                           @bind-Value:after="Controlador.GuardarFechaFacturaEnBorradorAsync"
+                           class="form-control me-2" style="min-width: 150px;" />
 
                 @if (Controlador.FacturaIDEnModificacion.HasValue)
                 {
                     <button class="btn btn-warning" @onclick="GuardarFactura">Actualizar</button>
+
                 }
                 else
                 {
@@ -102,6 +109,7 @@ else
             </div>
         }
     </div>
+
     <div class="card-body">
         @if (!string.IsNullOrWhiteSpace(errorAlGuardar))
         {
@@ -112,37 +120,46 @@ else
         {
             <table class="table table-striped table-hover">
                 <thead class="table-dark">
+
                     <tr>
                         <th>Producto</th>
                         <th>Cantidad</th>
                         <th>Precio Unitario</th>
+
                         <th>Subtotal</th>
                         <th>Acción</th>
                     </tr>
                 </thead>
                 <tbody>
+
                     @foreach (var item in itemsFactura)
                     {
                         <tr>
                             <td>@item.Producto</td>
+
                             <td>@item.Cantidad</td>
                             <td>@item.PrecioUnitario.ToString("C")</td>
                             <td>@item.Subtotal.ToString("C")</td>
                             <td>
+
                                 <button class="btn btn-primary btn-sm me-1" @onclick="() => PrepararEdicion(item)">
                                     ✏️
                                 </button>
+
                                 <button class="btn btn-danger btn-sm" @onclick="() => EliminarItemDeFactura(item)">
                                     🗑️
+
                                 </button>
                             </td>
                         </tr>
                     }
                 </tbody>
+
                 <tfoot>
                     <tr class="table-dark">
                         <td colspan="4" class="text-end fw-bold">TOTAL:</td>
                         <td class="fw-bold">@TotalFactura.ToString("C")</td>
+
                         <td></td>
                     </tr>
                 </tfoot>
@@ -151,6 +168,7 @@ else
         else
         {
             <p class="text-center text-muted">Aún no hay productos en la factura.</p>
+
         }
     </div>
 </div>
@@ -160,7 +178,6 @@ else
     private List<FacturaItem> itemsFactura = new List<FacturaItem>();
     private decimal TotalFactura => itemsFactura.Sum(item => item.Subtotal);
     private string errorAlGuardar = string.Empty;
-
     protected override async Task OnInitializedAsync()
     {
         await Controlador.CargarEstadoBorradorAsync();
@@ -201,13 +218,17 @@ else
             {
                 await Controlador.ActualizarFacturaGuardadaAsync(
                     Controlador.FacturaIDEnModificacion.Value,
-                    Controlador.NombreFacturaEnBorrador,
-                    itemsFactura
+                    Controlador.FechaFacturaEnBorrador,
+
+itemsFactura
                 );
             }
             else
             {
-                await Controlador.GuardarFacturaActualAsync(Controlador.NombreFacturaEnBorrador, itemsFactura);
+                await Controlador.GuardarFacturaActualAsync(
+                    Controlador.FechaFacturaEnBorrador,
+                    itemsFactura
+                );
             }
 
             itemsFactura = await Controlador.ObtenerItems();
