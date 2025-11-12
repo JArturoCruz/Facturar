@@ -10,13 +10,20 @@
 
 <h1>Facturas Guardadas</h1>
 
-@if (facturas == null)
+<div class="mb-3">
+    <input @bind-value="filtroUsuario"
+           @bind-value:event="oninput"
+           class="form-control"
+           placeholder="Buscar por nombre de usuario..." />
+</div>
+
+@if (todasLasFacturas == null)
 {
     <p><em>Cargando facturas...</em></p>
 }
-else if (!facturas.Any())
+else if (!FacturasFiltradas.Any())
 {
-    <p class="text-muted">No hay facturas guardadas.</p>
+    <p class="text-muted">No hay facturas que coincidan con la búsqueda.</p>
 }
 else
 {
@@ -31,7 +38,7 @@ else
             </tr>
         </thead>
         <tbody>
-            @foreach (var f in facturas)
+            @foreach (var f in FacturasFiltradas)
             {
                 <tr>
                     <td>@f.NombreFactura</td>
@@ -63,10 +70,30 @@ else
 <a href="/facturador" class="btn btn-success">Crear Nueva Factura</a>
 
 @code {
-    private List<Factura> facturas;
+    private List<Factura> todasLasFacturas;
+    private string filtroUsuario = string.Empty;
+
+    private List<Factura> FacturasFiltradas
+    {
+        get
+        {
+            if (todasLasFacturas == null)
+            {
+                return new List<Factura>();
+            }
+            if (string.IsNullOrWhiteSpace(filtroUsuario))
+            {
+                return todasLasFacturas;
+            }
+            return todasLasFacturas
+                .Where(f => f.NombreUsuario.Contains(filtroUsuario, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
-        facturas = await Controlador.ObtenerFacturasGuardadasAsync();
+        todasLasFacturas = await Controlador.ObtenerFacturasGuardadasAsync();
     }
 
     private async Task RecargarFactura(Factura factura)
@@ -97,8 +124,8 @@ else
         if (confirmado)
         {
             await Controlador.EliminarFacturaGuardadaAsync(factura.FacturaID);
-            facturas.Remove(factura);
+            todasLasFacturas.Remove(factura);
             StateHasChanged();
         }
     }
-}   
+}
