@@ -1,0 +1,48 @@
+﻿@page "/dashboard"
+@using Facturar.Components.Data
+@using Facturar.Components.Servicio
+@inject ControladorFacturacion Controlador
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Dashboard - Inteligencia de Negocio</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Dashboard del Sistema</h1>
+    <a href="/" class="btn btn-secondary">Volver al Inicio</a>
+</div>
+
+@if (stats == null)
+{
+    <div class="text-center mt-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p>Analizando datos del sistema...</p>
+    </div>
+}
+else {
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-white bg-primary mb-3 h-100">
+                <div class="card-header">Ingresos Totales</div>
+                <div class="card-body">
+                    <h2 class="card-title">@stats.IngresosTotales.ToString("C")</h2>
+                    <p class="card-text">Dinero total facturado históricamente.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+    private DashboardEstadisticas stats;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Delay(300);
+        stats = await Controlador.ObtenerDatosDashboardAsync();
+    }
+}

@@ -255,5 +255,10 @@ namespace Facturar.Components.Servicio
 
             return reporte;
         }
+
+        public async Task<DashboardEstadisticas> ObtenerDatosDashboardAsync()
+        {
+            return await _servicioFactura.ObtenerEstadisticasDashboardAsync();
+        }
     }
 }

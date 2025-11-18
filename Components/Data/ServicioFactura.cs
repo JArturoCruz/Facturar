@@ -414,5 +414,18 @@ namespace Facturar.Components.Data
             }
             return facturas;
         }
+
+        public async Task<DashboardEstadisticas> ObtenerEstadisticasDashboardAsync()
+        {
+            var stats = new DashboardEstadisticas();
+            using var conexion = new SqliteConnection($"Datasource={ruta}");
+            await conexion.OpenAsync();
+
+            var cmdTotal = conexion.CreateCommand();
+            cmdTotal.CommandText = "SELECT COALESCE(SUM(Total), 0) FROM Factura";
+            stats.IngresosTotales = Convert.ToDecimal(await cmdTotal.ExecuteScalarAsync());
+            return stats;
+        }
+          
     }
 }
