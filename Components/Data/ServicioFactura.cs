@@ -415,15 +415,23 @@ namespace Facturar.Components.Data
             return facturas;
         }
 
+        // === NUEVO MÉTODO PARA EL DASHBOARD ===
         public async Task<DashboardEstadisticas> ObtenerEstadisticasDashboardAsync()
         {
             var stats = new DashboardEstadisticas();
             using var conexion = new SqliteConnection($"Datasource={ruta}");
             await conexion.OpenAsync();
 
+            // 1. Ingresos Totales
             var cmdTotal = conexion.CreateCommand();
             cmdTotal.CommandText = "SELECT COALESCE(SUM(Total), 0) FROM Factura";
             stats.IngresosTotales = Convert.ToDecimal(await cmdTotal.ExecuteScalarAsync());
+            
+            // 2 total facturas 
+            var cmdCount = conexion.CreateCommand();
+            cmdCount.CommandText = "SELECT COUNT(*) FROM Factura";
+            stats.TotalFacturas = Convert.ToInt32(await cmdCount.ExecuteScalarAsync());
+
             return stats;
         }
           
