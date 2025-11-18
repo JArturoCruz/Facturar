@@ -44,7 +44,43 @@ else {
             </div>
         </div>
     </div>
-    
+
+    <div>
+    <div class="col-md-4">
+            <div class="card text-white bg-info mb-3 h-100">
+                <div class="card-header">Ticket Promedio</div>
+                <div class="card-body">
+                    <h2 class="card-title">@stats.TicketPromedio.ToString("C")</h2>
+                    <p class="card-text">Valor promedio de cada venta.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light fw-bold"> Rendimiento de Productos</div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Más Vendido (Unidades)</strong>
+                            <div class="text-muted small">@stats.ProductoMasVendido.Nombre</div>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">@stats.ProductoMasVendido.Valor.ToString("0") unid.</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Mayor Generador de Dinero</strong>
+                            <div class="text-muted small">@stats.ProductoConMasIngresos.Nombre</div>
+                        </div>
+                        <span class="badge bg-success rounded-pill">@stats.ProductoConMasIngresos.Valor.ToString("C")</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
 
 }
 

@@ -432,6 +432,49 @@ namespace Facturar.Components.Data
             cmdCount.CommandText = "SELECT COUNT(*) FROM Factura";
             stats.TotalFacturas = Convert.ToInt32(await cmdCount.ExecuteScalarAsync());
 
+            // 3. Ticket Promedio
+            if (stats.TotalFacturas > 0)
+                stats.TicketPromedio = stats.IngresosTotales / stats.TotalFacturas;
+
+            // 4. Producto más vendido (Cantidad)
+            var cmdProdQty = conexion.CreateCommand();
+            cmdProdQty.CommandText = @"
+                SELECT Producto, SUM(Cantidad) as TotalCant 
+                FROM FacturaItemHistorico 
+                GROUP BY Producto 
+                ORDER BY TotalCant DESC LIMIT 1";
+            using (var reader = await cmdProdQty.ExecuteReaderAsync())
+            {
+                if (await reader.ReadAsync())
+                {
+                    stats.ProductoMasVendido = new ProductoTop
+                    {
+                        Nombre = reader.GetString(0),
+                        Valor = reader.GetDecimal(1)
+                    };
+                }
+            }
+
+            // 5. Producto con más ingresos
+            var cmdProdMoney = conexion.CreateCommand();
+            cmdProdMoney.CommandText = @"
+                SELECT Producto, SUM(Cantidad * PrecioUnitario) as TotalDinero
+                FROM FacturaItemHistorico 
+                GROUP BY Producto 
+                ORDER BY TotalDinero DESC LIMIT 1";
+            using (var reader = await cmdProdMoney.ExecuteReaderAsync())
+            {
+                if (await reader.ReadAsync())
+                {
+                    stats.ProductoConMasIngresos = new ProductoTop
+                    {
+                        Nombre = reader.GetString(0),
+                        Valor = reader.GetDecimal(1)
+                    };
+                }
+            }
+
+
             return stats;
         }
           
