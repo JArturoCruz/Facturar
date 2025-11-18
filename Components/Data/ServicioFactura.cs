@@ -474,6 +474,25 @@ namespace Facturar.Components.Data
                 }
             }
 
+            // 6. Mes más exitoso
+            var cmdMes = conexion.CreateCommand();
+            cmdMes.CommandText = @"
+                SELECT strftime('%Y-%m', FechaCreacion) as Mes, SUM(Total) as TotalMes
+                FROM Factura 
+                GROUP BY Mes 
+                ORDER BY TotalMes DESC LIMIT 1";
+            using (var reader = await cmdMes.ExecuteReaderAsync())
+            {
+                if (await reader.ReadAsync())
+                {
+                    stats.MesMasExitoso = new MesVenta
+                    {
+                        MesAno = reader.GetString(0),
+                        Total = reader.GetDecimal(1)
+                    };
+                }
+            }
+
 
             return stats;
         }

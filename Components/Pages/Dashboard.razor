@@ -80,6 +80,28 @@ else {
             </div>
         </div>
 
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light fw-bold">📅 Mejores Momentos</div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Mejor Mes Histórico</strong>
+                            <div class="text-muted small">@stats.MesMasExitoso.MesAno</div>
+                        </div>
+                        <span class="badge bg-warning text-dark rounded-pill">@stats.MesMasExitoso.Total.ToString("C")</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Año Actual vs Pasados</strong>
+                            <div class="text-muted small">Ver tabla inferior</div>
+                        </div>
+                        <span class="badge bg-secondary rounded-pill">@stats.VentasPorAno.Count años reg.</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    
     </div>
 
 }
