@@ -133,9 +133,36 @@ else {
                     </tbody>
                 </table>
             </div>
-
+            <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                    <span>📄 Últimas 5 Facturas</span>
+                    <a href="/facturas" class="btn btn-sm btn-light">Ver todas</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Fecha</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach(var f in stats.UltimasFacturas)
+                            {
+                                <tr>
+                                    <td>@f.NombreUsuario</td>
+                                    <td>@f.FechaCreacion.ToString("d")</td>
+                                    <td class="text-end">@f.Total.ToString("C")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+           </div>
     </div>
-
+   </div>
 }
 
 

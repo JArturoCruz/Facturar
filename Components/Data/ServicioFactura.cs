@@ -527,7 +527,44 @@ namespace Facturar.Components.Data
                     };
                 }
             }
-
+            // 9 ventas anuales
+            var cmdAnual = conexion.CreateCommand();
+            cmdAnual.CommandText = @"
+                SELECT strftime('%Y', FechaCreacion) as Anio, SUM(Total) 
+                FROM Factura 
+                GROUP BY Anio 
+                ORDER BY Anio DESC";
+            using (var reader = await cmdAnual.ExecuteReaderAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    stats.VentasPorAno.Add(new VentaAnual
+                    {
+                        Ano = reader.GetString(0),
+                        Total = reader.GetDecimal(1)
+                    });
+                }
+            }
+            // 10 ultimas 5 facturas
+            var cmdRecientes = conexion.CreateCommand();
+            cmdRecientes.CommandText = @"
+                SELECT FacturaID, NombreFactura, FechaCreacion, Total, NombreUsuario 
+                FROM Factura 
+                ORDER BY FechaCreacion DESC LIMIT 5";
+            using (var reader = await cmdRecientes.ExecuteReaderAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    stats.UltimasFacturas.Add(new Factura
+                    {
+                        FacturaID = reader.GetInt32(0),
+                        NombreFactura = reader.GetString(1),
+                        FechaCreacion = DateTime.Parse(reader.GetString(2)),
+                        Total = reader.GetDecimal(3),
+                        NombreUsuario = reader.GetString(4)
+                    });
+                }
+            }
 
             return stats;
         }
