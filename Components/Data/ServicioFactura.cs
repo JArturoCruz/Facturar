@@ -492,6 +492,41 @@ namespace Facturar.Components.Data
                     };
                 }
             }
+            // 7. Usuario que más factura
+            var cmdUserMoney = conexion.CreateCommand();
+            cmdUserMoney.CommandText = @"
+                SELECT NombreUsuario, SUM(Total) as TotalDinero
+                FROM Factura 
+                GROUP BY NombreUsuario 
+                ORDER BY TotalDinero DESC LIMIT 1";
+            using (var reader = await cmdUserMoney.ExecuteReaderAsync())
+            {
+                if (await reader.ReadAsync())
+                {
+                    stats.UsuarioQueMasFactura = new UsuarioTop
+                    {
+                        Nombre = reader.GetString(0),
+                        Valor = reader.GetDecimal(1)
+                    };
+                }
+            }
+            var cmdUserCount = conexion.CreateCommand();
+            cmdUserCount.CommandText = @"
+                SELECT NombreUsuario, COUNT(*) as Conteo
+                FROM Factura 
+                GROUP BY NombreUsuario 
+                ORDER BY Conteo DESC LIMIT 1";
+            using (var reader = await cmdUserCount.ExecuteReaderAsync())
+            {
+                if (await reader.ReadAsync())
+                {
+                    stats.UsuarioConMasTransacciones = new UsuarioTop
+                    {
+                        Nombre = reader.GetString(0),
+                        Valor = reader.GetDecimal(1)
+                    };
+                }
+            }
 
 
             return stats;

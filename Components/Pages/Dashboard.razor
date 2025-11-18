@@ -79,7 +79,7 @@ else {
                 </ul>
             </div>
         </div>
-
+    </div>
         <div class="col-md-6">
             <div class="card shadow-sm h-100">
                 <div class="card-header bg-light fw-bold">📅 Mejores Momentos</div>
@@ -101,7 +101,39 @@ else {
                 </ul>
             </div>
         </div>
-    
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header bg-dark text-white">🥇 Top Usuarios</div>
+                    <div class="card-body">
+                        <p><strong>Mayor Facturador:</strong> @stats.UsuarioQueMasFactura.Nombre (@stats.UsuarioQueMasFactura.Valor.ToString("C"))</p>
+                        <hr />
+                        <p><strong>Más Trabajador (Cant. Facturas):</strong> @stats.UsuarioConMasTransacciones.Nombre (@stats.UsuarioConMasTransacciones.Valor.ToString("0") facturas)</p>
+                    </div>
+                </div>
+                </div>
+
+                <div class="card shadow-sm">
+                    <div class="card-header bg-dark text-white"> Histórico Anual</div>
+                    <table class="table table-sm table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th>Año</th>
+                                <th class="text-end">Total Vendido</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var anio in stats.VentasPorAno)
+                            {
+                                <tr>
+                                    <td>@anio.Ano</td>
+                                    <td class="text-end">@anio.Total.ToString("C")</td>
+                                </tr>
+                            }
+                    </tbody>
+                </table>
+            </div>
+
     </div>
 
 }
