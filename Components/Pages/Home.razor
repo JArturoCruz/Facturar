@@ -2,24 +2,30 @@
 
 <PageTitle>Home</PageTitle>
 
-<div class="text-center">
-    <h1 class="display-4">Bienvenido al Facturador</h1>
-    <p class="lead">Selecciona una acción para comenzar.</p>
+<div class="text-center" style="padding: 4rem 0;">
+    <h1 class="display-4 mb-3" style="font-weight: 800; color: var(--blue-deep);">Facturar</h1>
+    <p class="lead text-muted mb-5">Sistema inteligente de gestión y facturación.</p>
 
-    <hr class="my-4" />
+    <div class="d-grid gap-3 col-lg-6 col-md-8 mx-auto">
+        <a href="/facturador" class="btn btn-primary btn-lg shadow-sm">
+            <span class="me-2">📝</span> Ir al Facturador
+        </a>
 
-    <div class="d-grid gap-2 col-6 mx-auto">
-        <a href="/facturador" class="btn btn-primary btn-lg">
-            Ir al Facturador (Crear / Modificar)
-        </a>
-        <a href="/facturas" class="btn btn-secondary btn-lg">
-            Ver Facturas Guardadas
-        </a>
-        <a href="/reportes" class="btn btn-info btn-lg">
-            Generar Reportes
-        </a>
-        <a href="/dashboard" class="btn btn-warning btn-lg text-dark">
-            Ver Dashboard (Estadísticas)
+        <div class="row g-2">
+            <div class="col-md-6">
+                <a href="/facturas" class="btn btn-secondary w-100 h-100 d-flex align-items-center justify-content-center">
+                    <span>📂 Ver Historial</span>
+                </a>
+            </div>
+            <div class="col-md-6">
+                <a href="/reportes" class="btn btn-secondary w-100 h-100 d-flex align-items-center justify-content-center">
+                    <span>📈 Reportes</span>
+                </a>
+            </div>
+        </div>
+
+        <a href="/dashboard" class="btn btn-info btn-lg text-white shadow-sm mt-2">
+            <span class="me-2">📊</span> Ver Dashboard de Estadísticas
         </a>
     </div>
 </div>

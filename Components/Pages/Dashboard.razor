@@ -5,7 +5,7 @@
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
 
-<PageTitle>Dashboard - Inteligencia de Negocio</PageTitle>
+<PageTitle>Dashboard</PageTitle>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>Dashboard del Sistema</h1>
@@ -18,40 +18,36 @@
         <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Cargando...</span>
         </div>
-        <p>Analizando datos del sistema...</p>
+        <p class="mt-3 text-muted">Analizando datos del sistema...</p>
     </div>
 }
-else {
-
+else
+{
     <div class="row mb-4">
         <div class="col-md-4">
-            <div class="card text-white bg-primary mb-3 h-100">
-                <div class="card-header">Ingresos Totales</div>
+            <div class="card text-white bg-primary mb-3 h-100 border-0">
+                <div class="card-header bg-transparent border-0 text-white opacity-75">Ingresos Totales</div>
                 <div class="card-body">
-                    <h2 class="card-title">@stats.IngresosTotales.ToString("C")</h2>
-                    <p class="card-text">Dinero total facturado históricamente.</p>
+                    <h2 class="card-title text-white display-6 fw-bold">@stats.IngresosTotales.ToString("C")</h2>
+                    <p class="card-text opacity-75">Facturado históricamente.</p>
                 </div>
             </div>
         </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card text-white bg-success mb-3 h-100">
-            <div class="card-header">Total Facturas</div>
-            <div class="card-body">
-                <h2 class="card-title">@stats.TotalFacturas</h2>
-                <p class="card-text">Facturas emitidas hasta la fecha.</p>
+        <div class="col-md-4">
+            <div class="card text-white bg-info mb-3 h-100 border-0">
+                <div class="card-header bg-transparent border-0 text-white opacity-75">Total Facturas</div>
+                <div class="card-body">
+                    <h2 class="card-title text-white display-6 fw-bold">@stats.TotalFacturas</h2>
+                    <p class="card-text opacity-75">Documentos emitidos.</p>
+                </div>
             </div>
         </div>
-    </div>
-
-    <div>
-    <div class="col-md-4">
-            <div class="card text-white bg-info mb-3 h-100">
-                <div class="card-header">Ticket Promedio</div>
+        <div class="col-md-4">
+            <div class="card bg-white mb-3 h-100">
+                <div class="card-header bg-transparent text-muted">Ticket Promedio</div>
                 <div class="card-body">
-                    <h2 class="card-title">@stats.TicketPromedio.ToString("C")</h2>
-                    <p class="card-text">Valor promedio de cada venta.</p>
+                    <h2 class="card-title text-primary display-6 fw-bold">@stats.TicketPromedio.ToString("C")</h2>
+                    <p class="card-text text-muted">Valor promedio por venta.</p>
                 </div>
             </div>
         </div>
@@ -59,19 +55,19 @@ else {
 
     <div class="row mb-4">
         <div class="col-md-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-light fw-bold"> Rendimiento de Productos</div>
+            <div class="card h-100">
+                <div class="card-header">🏆 Rendimiento de Productos</div>
                 <ul class="list-group list-group-flush">
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <li class="list-group-item d-flex justify-content-between align-items-center border-0">
                         <div>
                             <strong>Más Vendido (Unidades)</strong>
                             <div class="text-muted small">@stats.ProductoMasVendido.Nombre</div>
                         </div>
                         <span class="badge bg-primary rounded-pill">@stats.ProductoMasVendido.Valor.ToString("0") unid.</span>
                     </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <li class="list-group-item d-flex justify-content-between align-items-center border-0 bg-light rounded my-2 mx-2">
                         <div>
-                            <strong>Mayor Generador de Dinero</strong>
+                            <strong>Mayor Generador ($)</strong>
                             <div class="text-muted small">@stats.ProductoConMasIngresos.Nombre</div>
                         </div>
                         <span class="badge bg-success rounded-pill">@stats.ProductoConMasIngresos.Valor.ToString("C")</span>
@@ -79,65 +75,74 @@ else {
                 </ul>
             </div>
         </div>
-    </div>
+
         <div class="col-md-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-light fw-bold">📅 Mejores Momentos</div>
+            <div class="card h-100">
+                <div class="card-header">📅 Mejores Momentos</div>
                 <ul class="list-group list-group-flush">
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <li class="list-group-item d-flex justify-content-between align-items-center border-0">
                         <div>
                             <strong>Mejor Mes Histórico</strong>
                             <div class="text-muted small">@stats.MesMasExitoso.MesAno</div>
                         </div>
-                        <span class="badge bg-warning text-dark rounded-pill">@stats.MesMasExitoso.Total.ToString("C")</span>
+                        <span class="badge bg-info rounded-pill">@stats.MesMasExitoso.Total.ToString("C")</span>
                     </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <li class="list-group-item d-flex justify-content-between align-items-center border-0">
                         <div>
-                            <strong>Año Actual vs Pasados</strong>
-                            <div class="text-muted small">Ver tabla inferior</div>
+                            <strong>Años Registrados</strong>
+                            <div class="text-muted small">Historial disponible</div>
                         </div>
-                        <span class="badge bg-secondary rounded-pill">@stats.VentasPorAno.Count años reg.</span>
+                        <span class="badge bg-secondary rounded-pill">@stats.VentasPorAno.Count años</span>
                     </li>
                 </ul>
             </div>
         </div>
-        <div class="row mb-4">
-            <div class="col-md-6">
-                <div class="card shadow-sm mb-3">
-                    <div class="card-header bg-dark text-white">🥇 Top Usuarios</div>
-                    <div class="card-body">
-                        <p><strong>Mayor Facturador:</strong> @stats.UsuarioQueMasFactura.Nombre (@stats.UsuarioQueMasFactura.Valor.ToString("C"))</p>
-                        <hr />
-                        <p><strong>Más Trabajador (Cant. Facturas):</strong> @stats.UsuarioConMasTransacciones.Nombre (@stats.UsuarioConMasTransacciones.Valor.ToString("0") facturas)</p>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header">🥇 Top Usuarios</div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3">
+                        <span>Mayor Facturador:</span>
+                        <strong class="text-primary">@stats.UsuarioQueMasFactura.Nombre (@stats.UsuarioQueMasFactura.Valor.ToString("C"))</strong>
+                    </div>
+                    <hr class="opacity-10" />
+                    <div class="d-flex justify-content-between">
+                        <span>Más Activo:</span>
+                        <strong class="text-info">@stats.UsuarioConMasTransacciones.Nombre (@stats.UsuarioConMasTransacciones.Valor.ToString("0") facts.)</strong>
                     </div>
                 </div>
-                </div>
+            </div>
 
-                <div class="card shadow-sm">
-                    <div class="card-header bg-dark text-white"> Histórico Anual</div>
-                    <table class="table table-sm table-striped mb-0">
-                        <thead>
+            <div class="card">
+                <div class="card-header">📊 Histórico Anual</div>
+                <table class="table table-sm table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Año</th>
+                            <th class="text-end">Total Vendido</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var anio in stats.VentasPorAno)
+                        {
                             <tr>
-                                <th>Año</th>
-                                <th class="text-end">Total Vendido</th>
+                                <td>@anio.Ano</td>
+                                <td class="text-end fw-bold text-primary">@anio.Total.ToString("C")</td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var anio in stats.VentasPorAno)
-                            {
-                                <tr>
-                                    <td>@anio.Ano</td>
-                                    <td class="text-end">@anio.Total.ToString("C")</td>
-                                </tr>
-                            }
+                        }
                     </tbody>
                 </table>
             </div>
-            <div class="col-md-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
-                    <span>📄 Últimas 5 Facturas</span>
-                    <a href="/facturas" class="btn btn-sm btn-light">Ver todas</a>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>📄 Actividad Reciente</span>
+                    <a href="/facturas" class="btn btn-sm btn-outline-primary">Ver todas</a>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
@@ -149,22 +154,21 @@ else {
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach(var f in stats.UltimasFacturas)
+                            @foreach (var f in stats.UltimasFacturas)
                             {
                                 <tr>
                                     <td>@f.NombreUsuario</td>
-                                    <td>@f.FechaCreacion.ToString("d")</td>
-                                    <td class="text-end">@f.Total.ToString("C")</td>
+                                    <td class="text-muted small">@f.FechaCreacion.ToString("d")</td>
+                                    <td class="text-end fw-bold">@f.Total.ToString("C")</td>
                                 </tr>
                             }
                         </tbody>
                     </table>
                 </div>
-           </div>
+            </div>
+        </div>
     </div>
-   </div>
 }
-
 
 @code {
     private DashboardEstadisticas stats;

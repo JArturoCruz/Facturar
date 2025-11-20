@@ -1,15 +1,91 @@
 ﻿@inherits LayoutComponentBase
 
 <div class="page">
+    <header class="top-bar">
+        <div class="top-bar-content">
+            <a href="/" class="brand-logo">
+                <span class="icon">🔷</span> Factura<span class="bold">Sys</span>
+            </a>
+
+            <nav class="nav-links">
+                <a href="/facturador" class="nav-item">Facturar</a>
+                <a href="/facturas" class="nav-item">Historial</a>
+                <a href="/dashboard" class="nav-item">Dashboard</a>
+                <a href="/reportes" class="nav-item">Reportes</a>
+            </nav>
+        </div>
+    </header>
+
     <main>
-        <article class="content px-4">
+        <div class="content">
             @Body
-        </article>
+        </div>
     </main>
 </div>
 
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
+<div id="blazor-error-ui">
+    Ha ocurrido un error inesperado.
+    <a href="" class="reload">Recargar</a>
     <span class="dismiss">🗙</span>
 </div>
+
+<style>
+    .top-bar {
+        background-color: #FFFFFF;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 0.8rem 0;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+    }
+
+    .top-bar-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .brand-logo {
+        font-family: 'Poppins', sans-serif;
+        font-size: 1.4rem;
+        color: #1e3a8a;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+        .brand-logo .bold {
+            font-weight: 700;
+            color: #3b82f6;
+        }
+
+        .brand-logo:hover {
+            text-decoration: none;
+            color: #1e3a8a;
+        }
+
+    .nav-links {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .nav-item {
+        color: #64748b;
+        font-weight: 500;
+        font-size: 0.95rem;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+
+        .nav-item:hover {
+            background-color: #eff6ff; /* Azul Hielo */
+            color: #1e3a8a; /* Azul Profundo */
+            text-decoration: none;
+        }
+</style>
