@@ -5,95 +5,132 @@
 @inject ControladorFacturacion Controlador
 @inject NavigationManager Navigation
 
-<PageTitle>Reporte Anual</PageTitle>
+<PageTitle>Reportes y Estadísticas</PageTitle>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1>Reporte Anual por Usuario</h1>
-    <div>
-        <a href="/" class="btn btn-secondary">Volver al Inicio</a>
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="fw-bold text-primary">Generador de Reportes</h1>
+            <p class="text-muted mb-0">Consulta el historial y rendimiento por cliente.</p>
+        </div>
+        <a href="/" class="btn btn-outline-secondary">
+            <i class="bi bi-house"></i> Volver al Inicio
+        </a>
     </div>
-</div>
 
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
-        <div class="row g-3 align-items-center">
-            <div class="col-auto">
-                <label for="usuario" class="col-form-label">Usuario:</label>
-            </div>
-            <div class="col-auto">
-                <InputText id="usuario" class="form-control" @bind-Value="nombreUsuarioParaBuscar" />
-            </div>
-            <div class="col-auto">
-                <label for="anio" class="col-form-label">Año:</label>
-            </div>
-            <div class="col-auto">
-                <InputNumber id="anio" class="form-control" @bind-Value="anioParaBuscar" />
-            </div>
-            <div class="col-auto">
-                <button class="btn btn-primary" @onclick="HandleGenerarReporte">Generar Reporte</button>
+    <div class="card border-0 shadow-sm mb-5 bg-white filters-card">
+        <div class="card-body p-4">
+            <h6 class="text-uppercase text-muted fw-bold mb-3 small">Parámetros del Reporte</h6>
+            <div class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label for="usuario" class="form-label fw-medium">Nombre del Cliente / Usuario</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-person-fill text-muted"></i></span>
+                        <InputText id="usuario" class="form-control border-start-0 ps-0"
+                                   placeholder="Ej. Juan Pérez"
+                                   @bind-Value="nombreUsuarioParaBuscar" />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label for="anio" class="form-label fw-medium">Año Fiscal</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-calendar-event text-muted"></i></span>
+                        <InputNumber id="anio" class="form-control border-start-0 ps-0" @bind-Value="anioParaBuscar" />
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-primary w-100 shadow-sm" @onclick="HandleGenerarReporte" disabled="@cargando">
+                        @if (cargando)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            <span>Procesando...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-file-earmark-bar-graph me-2"></i>
+                            <span>Generar Reporte</span>
+                        }
+                    </button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-@if (cargando)
-{
-    <p><em>Generando reporte...</em></p>
-}
-else if (!string.IsNullOrWhiteSpace(errorEnReporte))
-{
-    <div class="alert alert-danger">@errorEnReporte</div>
-}
-else if (reporte != null)
-{
-    <div class="card shadow-sm">
-        <div class="card-header">
-            <h2 class="mb-0">Reporte del Año: @reporte.Anio (Usuario: @nombreUsuarioParaBuscar)</h2>
+    @if (!string.IsNullOrWhiteSpace(errorEnReporte))
+    {
+        <div class="alert alert-danger shadow-sm border-0 d-flex align-items-center">
+            <i class="bi bi-exclamation-circle-fill fs-4 me-3"></i>
+            <div>
+                <strong>Error al generar:</strong> @errorEnReporte
+            </div>
         </div>
-        <div class="card-body">
+    }
+
+    @if (reporte != null)
+    {
+        <div class="report-paper fade-in-up">
+
+            <div class="text-center mb-5 border-bottom pb-4">
+                <div class="text-uppercase text-muted small letter-spacing-2 mb-2">Informe Financiero Anual</div>
+                <h2 class="display-6 fw-bold text-dark mb-1">Reporte de Facturación</h2>
+                <h4 class="text-primary fw-light">@nombreUsuarioParaBuscar</h4>
+                <div class="badge bg-light text-secondary mt-2 px-3 py-2 rounded-pill border">
+                    Ejercicio Fiscal @reporte.Anio
+                </div>
+            </div>
+
             @if (!reporte.Meses.Any(m => m.Facturas.Any()))
             {
-                <p class="text-muted">No se encontraron facturas para <strong>@nombreUsuarioParaBuscar</strong> en el año @reporte.Anio.</p>
+                <div class="text-center py-5 text-muted opacity-75">
+                    <i class="bi bi-folder-x display-1 d-block mb-3"></i>
+                    <p class="lead">No se encontraron movimientos registrados para este criterio.</p>
+                </div>
             }
             else
             {
-                <div class="accordion" id="reporte-accordion">
+                <div class="accordion accordion-flush" id="reporte-accordion">
                     @foreach (var mes in reporte.Meses.Where(m => m.Facturas.Any()))
                     {
-                        <div class="accordion-item">
-                            <h3 class="accordion-header" id="heading-@mes.NumeroMes">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-@mes.NumeroMes" aria-expanded="false" aria-controls="collapse-@mes.NumeroMes">
-                                    @mes.NombreMes - Total: @mes.TotalMes.ToString("C")
+                        <div class="accordion-item border-0 mb-3 shadow-sm rounded overflow-hidden">
+                            <h2 class="accordion-header" id="heading-@mes.NumeroMes">
+                                <button class="accordion-button collapsed bg-light text-dark fw-medium" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#collapse-@mes.NumeroMes">
+                                    <div class="d-flex justify-content-between w-100 me-3 align-items-center">
+                                        <span class="d-flex align-items-center">
+                                            <i class="bi bi-calendar-month me-2 text-primary"></i>
+                                            @mes.NombreMes
+                                            <span class="badge bg-white text-secondary border ms-2 rounded-pill">@mes.Facturas.Count doctos.</span>
+                                        </span>
+                                        <span class="fw-bold text-success">@mes.TotalMes.ToString("C")</span>
+                                    </div>
                                 </button>
-                            </h3>
-                            <div id="collapse-@mes.NumeroMes" class="accordion-collapse collapse" aria-labelledby="heading-@mes.NumeroMes" data-bs-parent="#reporte-accordion">
-                                <div class="accordion-body">
-                                    <table class="table table-sm table-striped table-hover">
-                                        <thead class="table-dark">
-                                            <tr>
-                                                <th>Nº Factura</th>
-                                                <th>Fecha</th>
-                                                <th>Total</th>
+                            </h2>
+
+                            <div id="collapse-@mes.NumeroMes" class="accordion-collapse collapse"
+                                 data-bs-parent="#reporte-accordion">
+                                <div class="accordion-body p-0 bg-white">
+                                    <table class="table table-hover mb-0">
+                                        <thead class="bg-white border-bottom">
+                                            <tr class="text-uppercase text-muted x-small">
+                                                <th class="ps-4 py-3 fw-semibold">Folio</th>
+                                                <th class="py-3 fw-semibold">Fecha Emisión</th>
+                                                <th class="text-end pe-4 py-3 fw-semibold">Monto</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             @foreach (var factura in mes.Facturas)
                                             {
                                                 <tr>
-                                                    <td>
-                                                        <a href="/factura/@factura.FacturaID">@factura.NombreFactura</a>
+                                                    <td class="ps-4">
+                                                        <a href="/factura/@factura.FacturaID" class="text-decoration-none fw-bold text-primary">
+                                                            #@factura.NombreFactura
+                                                        </a>
                                                     </td>
-                                                    <td>@factura.FechaCreacion.ToString("d")</td>
-                                                    <td>@factura.Total.ToString("C")</td>
+                                                    <td class="text-muted">@factura.FechaCreacion.ToString("d 'de' MMMM")</td>
+                                                    <td class="text-end pe-4 fw-medium">@factura.Total.ToString("C")</td>
                                                 </tr>
                                             }
                                         </tbody>
-                                        <tfoot>
-                                            <tr class="table-dark">
-                                                <td colspan="2" class="text-end fw-bold">Total @mes.NombreMes:</td>
-                                                <td class="fw-bold">@mes.TotalMes.ToString("C")</td>
-                                            </tr>
-                                        </tfoot>
                                     </table>
                                 </div>
                             </div>
@@ -101,15 +138,84 @@ else if (reporte != null)
                     }
                 </div>
 
-                <hr class="my-4" />
+                <div class="total-summary mt-5 p-4 rounded text-white d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="d-block text-white-50 text-uppercase small">Ingreso Bruto Anual</span>
+                        <span class="h5 mb-0">Total Acumulado (@reporte.Anio)</span>
+                    </div>
+                    <div class="display-5 fw-bold">
+                        @reporte.TotalAnual.ToString("C")
+                    </div>
+                </div>
 
-                <div class="alert alert-success fs-4 text-center">
-                    <strong>Total Anual (@reporte.Anio): @reporte.TotalAnual.ToString("C")</strong>
+                <div class="text-center mt-4 text-muted small">
+                    <p>Reporte generado el @DateTime.Now.ToString("g")</p>
                 </div>
             }
         </div>
-    </div>
-}
+    }
+</div>
+
+<style>
+    .filters-card {
+        border-radius: 12px;
+    }
+
+    .report-paper {
+        background: white;
+        padding: 3rem;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        border: 1px solid #eef2f6;
+        min-height: 400px;
+    }
+
+    .letter-spacing-2 {
+        letter-spacing: 2px;
+    }
+
+    .x-small {
+        font-size: 0.75rem;
+    }
+
+    /* Acordeón personalizado */
+    .accordion-button:not(.collapsed) {
+        background-color: #eff6ff !important; /* Azul hielo */
+        color: var(--blue-deep) !important;
+        box-shadow: none;
+    }
+
+    .accordion-button:focus {
+        box-shadow: none;
+        border-color: rgba(0,0,0,0.1);
+    }
+
+    .accordion-button::after {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%2364748b'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+    }
+
+    .total-summary {
+        background: linear-gradient(135deg, var(--blue-deep) 0%, var(--blue-royal) 100%);
+        box-shadow: 0 4px 15px rgba(30, 58, 138, 0.2);
+    }
+
+    /* Animación de entrada */
+    .fade-in-up {
+        animation: fadeInUp 0.5s ease-out forwards;
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
 
 @code {
     private int anioParaBuscar = DateTime.Today.Year;
@@ -123,6 +229,8 @@ else if (reporte != null)
         cargando = true;
         reporte = null;
         errorEnReporte = string.Empty;
+        // Pequeño delay para que se note la transición de carga
+        await Task.Delay(200);
         StateHasChanged();
 
         try
