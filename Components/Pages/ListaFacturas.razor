@@ -6,77 +6,184 @@
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
 
-<PageTitle>Facturas Guardadas</PageTitle>
+<PageTitle>Historial - FacturaPop</PageTitle>
 
-<h1>Facturas Guardadas</h1>
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="fw-bold text-primary">Historial de Facturas</h1>
+            <p class="text-muted mb-0">Gestiona y consulta tus documentos emitidos.</p>
+        </div>
+        <div>
+            <a href="/" class="btn btn-outline-secondary me-2">
+                <i class="bi bi-house"></i> Inicio
+            </a>
+            <a href="/facturador" class="btn btn-primary shadow-sm">
+                <i class="bi bi-plus-lg me-1"></i> Nueva Factura
+            </a>
+        </div>
+    </div>
 
-<a href="/" class="btn btn-outline-primary me-2">
-    🏠 Inicio
-</a>
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="search-bar-card p-2 bg-white rounded-pill shadow-sm border d-flex align-items-center">
+                <div class="px-3 text-muted border-end">
+                    <i class="bi bi-search"></i>
+                </div>
+                <input value="@Controlador.FiltroListaFacturas"
+                       @oninput="OnFiltroUsuarioChanged"
+                       class="form-control border-0 bg-transparent shadow-none"
+                       placeholder="Buscar por nombre de cliente..." />
 
-<div class="input-group mb-3">
-    <input value="@Controlador.FiltroListaFacturas"
-           @oninput="OnFiltroUsuarioChanged"
-           class="form-control"
-           placeholder="Buscar por nombre de usuario..." />
-    <button class="btn btn-outline-secondary" type="button" @onclick="LimpiarFiltro">Limpiar</button>
+                @if (!string.IsNullOrWhiteSpace(Controlador.FiltroListaFacturas))
+                {
+                    <button class="btn btn-link text-muted pe-3" @onclick="LimpiarFiltro">
+                        <i class="bi bi-x-circle-fill"></i>
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="invoice-paper-list fade-in">
+        @if (todasLasFacturas == null)
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-2 text-muted">Cargando historial...</p>
+            </div>
+        }
+        else if (!FacturasFiltradas.Any())
+        {
+            <div class="text-center py-5 opacity-50">
+                <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+                <h4 class="text-muted">No se encontraron facturas</h4>
+                <p>Intenta con otro término de búsqueda o crea una nueva.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr class="text-uppercase text-muted small">
+                            <th class="ps-4 py-3 border-0 rounded-start">Nº Folio</th>
+                            <th class="py-3 border-0">Cliente</th>
+                            <th class="py-3 border-0">Fecha Emisión</th>
+                            <th class="text-end py-3 border-0">Total</th>
+                            <th class="text-end pe-4 py-3 border-0 rounded-end">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var f in FacturasFiltradas)
+                        {
+                            <tr class="invoice-row">
+                                <td class="ps-4 fw-bold text-primary">#@f.NombreFactura</td>
+                                <td class="fw-medium text-dark">@f.NombreUsuario</td>
+                                <td class="text-muted">
+                                    <i class="bi bi-calendar4-week me-1"></i>
+                                    @f.FechaCreacion.ToString("d")
+                                </td>
+                                <td class="text-end fw-bold text-dark">@f.Total.ToString("C")</td>
+                                <td class="text-end pe-4">
+                                    <div class="btn-group shadow-sm rounded-pill" role="group">
+                                        <a href="/factura/@f.FacturaID" class="btn btn-sm btn-light border" title="Ver Detalle">
+                                            <i class="bi bi-eye text-primary"></i>
+                                        </a>
+
+                                        <button class="btn btn-sm btn-light border" @onclick="() => RecargarFactura(f)" title="Modificar Borrador">
+                                            <i class="bi bi-pencil-square text-warning"></i>
+                                        </button>
+
+                                        <button class="btn btn-sm btn-light border" @onclick="() => EliminarFactura(f)" title="Eliminar">
+                                            <i class="bi bi-trash text-danger"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
 </div>
 
-@if (todasLasFacturas == null)
-{
-    <p><em>Cargando facturas...</em></p>
-}
-else if (!FacturasFiltradas.Any())
-{
-    <p class="text-muted">No hay facturas que coincidan con la búsqueda.</p>
-}
-else
-{
-    <table class="table table-hover">
-        <thead class="table-dark">
-            <tr>
-                <th>Nº Factura</th>
-                <th>Usuario</th>
-                <th>Fecha de Creación</th>
-                <th>Total</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var f in FacturasFiltradas)
-            {
-                <tr>
-                    <td>@f.NombreFactura</td>
-                    <td>@f.NombreUsuario</td>
-                    <td>@f.FechaCreacion.ToString("d")</td>
-                    <td>@f.Total.ToString("C")</td>
-                    <td>
-                        <div class="btn-group" role="group">
-                            <a href="/factura/@f.FacturaID" class="btn btn-primary btn-sm">
-                                Ver
-                            </a>
+<style>
+    .invoice-paper-list {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        border: 1px solid #eef2f6;
+        padding: 1rem;
+        min-height: 400px;
+    }
 
-                            <button class="btn btn-warning btn-sm" @onclick="() => RecargarFactura(f)">
-                                Modificar
-                            </button>
+    .search-bar-card {
+        transition: all 0.3s;
+        border-color: var(--pop-silver) !important;
+    }
 
-                            <button class="btn btn-danger btn-sm" @onclick="() => EliminarFactura(f)">
-                                🗑️
-                            </button>
+        .search-bar-card:focus-within {
+            border-color: var(--pop-primary) !important;
+            box-shadow: 0 4px 12px rgba(144, 103, 198, 0.15) !important;
+        }
 
-                        </div>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+    /* Tabla personalizada */
+    .table thead th {
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        background-color: #f8fafc;
+        color: var(--pop-dark);
+    }
 
-<a href="/facturador" class="btn btn-success">Crear Nueva Factura</a>
+    .invoice-row {
+        transition: background-color 0.2s;
+    }
+
+        .invoice-row:hover {
+            background-color: #fcfaff !important; /* Un lila muy muy suave */
+        }
+
+        .invoice-row td {
+            border-bottom: 1px solid #f1f5f9;
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
+
+        .invoice-row:last-child td {
+            border-bottom: none;
+        }
+
+    .btn-light {
+        background: white;
+        transition: all 0.2s;
+    }
+
+        .btn-light:hover {
+            background: #f1f5f9;
+            transform: translateY(-1px);
+        }
+
+    .fade-in {
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
 
 @code {
     private List<Factura> todasLasFacturas;
-
     private List<Factura> FacturasFiltradas
     {
         get
@@ -115,7 +222,7 @@ else
 
     private async Task RecargarFactura(Factura factura)
     {
-        var mensaje = $"¿Estás seguro de que quieres modificar la factura '{factura.NombreFactura}' para '{factura.NombreUsuario}'?\n\n¡CUIDADO! Esto reemplazará tu factura actual en el borrador.";
+        var mensaje = $"¿Cargar '{factura.NombreFactura}' al editor? Se perderá el borrador actual no guardado.";
         bool confirmado = await JSRuntime.InvokeAsync<bool>("confirm", mensaje);
 
         if (confirmado)
@@ -135,7 +242,7 @@ else
 
     private async Task EliminarFactura(Factura factura)
     {
-        var mensaje = $"¿Estás seguro de que quieres ELIMINAR PERMANENTEMENTE la factura '{factura.NombreFactura}' ('{factura.NombreUsuario}')?\n\nEsta acción no se puede deshacer.";
+        var mensaje = $"¿Estás seguro de ELIMINAR la factura #{factura.NombreFactura} de {factura.NombreUsuario}?";
         bool confirmado = await JSRuntime.InvokeAsync<bool>("confirm", mensaje);
 
         if (confirmado)

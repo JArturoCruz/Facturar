@@ -1,26 +1,30 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700;800&display=swap');
 
 :root {
-    /* === PALETA MONOCROMÁTICA AZUL === */
-    /* Tonos Base */
-    --blue-deep: #1e3a8a; /* Azul Noche - Texto principal y Navbar */
-    --blue-royal: #3b82f6; /* Azul Vibrante - Botones Primarios */
-    --blue-royal-hover: #2563eb;
-    --blue-soft: #93c5fd; /* Azul Pastel - Acentos y bordes */
-    --blue-ice: #eff6ff; /* Azul Hielo - Fondo de la App */
-    /* Semáforo Azulado (Reemplazando colores estándar) */
-    --status-success: #10b981; /* Esmeralda suave */
-    --status-danger: #ef4444; /* Rojo suave mate */
-    --status-warning: #0ea5e9; /* REEMPLAZO DEL AMARILLO -> Azul Cielo Intenso */
-    --status-info: #6366f1; /* Índigo */
-    /* Interfaz */
-    --bg-app: var(--blue-ice);
+    /* === NUEVA PALETA FACTURAPOP === */
+    --pop-dark: #242038; /* Fondo Oscuro / Texto Principal */
+    --pop-primary: #9067C6; /* Violeta Vibrante (Acción Principal) */
+    --pop-secondary: #8D86C9; /* Lavanda (Acentos / Secundario) */
+    --pop-silver: #CAC4CE; /* Gris Lila (Bordes / Muted) */
+    --pop-light: #F7F7FF; /* Blanco Hielo (Fondo General) */
+    /* Mapeo al sistema existente (para compatibilidad) */
+    --bg-app: var(--pop-light);
     --bg-card: #ffffff;
-    --text-main: #1e293b; /* Gris azulado oscuro */
-    --text-muted: #64748b; /* Gris azulado medio */
+    --text-main: var(--pop-dark);
+    --text-muted: #6b6675; /* Derivado del dark pero con opacidad */
+
+    --blue-deep: var(--pop-dark); /* Reemplaza el azul noche */
+    --blue-royal: var(--pop-primary); /* Reemplaza el azul real */
+    --blue-soft: var(--pop-secondary); /* Reemplaza el azul pastel */
+    /* Estados del Sistema adaptados */
+    --status-success: #10b981;
+    --status-danger: #ef4444;
+    --status-warning: #f59e0b; /* Regresamos a un ámbar que combina mejor con violeta */
+    --status-info: var(--pop-secondary);
     /* Efectos */
-    --radius-std: 12px;
-    --shadow-soft: 0 10px 15px -3px rgba(59, 130, 246, 0.05), 0 4px 6px -2px rgba(59, 130, 246, 0.025);
+    --radius-std: 16px; /* Bordes más redondeados para estilo "Pop" */
+    --shadow-soft: 0 10px 25px -5px rgba(36, 32, 56, 0.05), 0 8px 10px -6px rgba(36, 32, 56, 0.01);
+    --shadow-pop: 0 10px 30px rgba(144, 103, 198, 0.15); /* Sombra violeta brillante */
 }
 
 /* === RESET Y BASES === */
@@ -32,176 +36,111 @@ body {
 
 h1, h2, h3, h4, h5, h6 {
     font-family: 'Poppins', sans-serif;
-    color: var(--blue-deep);
+    color: var(--pop-dark);
     font-weight: 700;
     letter-spacing: -0.5px;
 }
 
 a {
-    color: var(--blue-royal);
+    color: var(--pop-primary);
     text-decoration: none;
-    transition: color 0.2s;
+    transition: all 0.2s;
 }
 
     a:hover {
-        color: var(--blue-royal-hover);
+        color: var(--pop-dark);
     }
+
+/* === BRANDING FACTURAPOP === */
+.brand-gradient {
+    background: linear-gradient(135deg, var(--pop-dark) 0%, var(--pop-primary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 800; /* Extra bold para la marca */
+}
+
+.bg-gradient-pop {
+    background: linear-gradient(135deg, var(--pop-dark) 0%, var(--pop-primary) 100%);
+    color: white;
+}
 
 /* === TARJETAS (Cards) === */
 .card {
     background-color: var(--bg-card);
-    border: 1px solid #dbeafe; /* Borde azul muy sutil */
+    border: 1px solid rgba(202, 196, 206, 0.4); /* Usando el gris lila */
     border-radius: var(--radius-std);
     box-shadow: var(--shadow-soft);
     transition: all 0.3s ease;
 }
 
     .card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.1);
-        border-color: var(--blue-soft);
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-pop);
+        border-color: var(--pop-secondary);
     }
 
 .card-header {
     background-color: white;
-    border-bottom: 1px solid #eff6ff;
-    color: var(--blue-deep);
+    border-bottom: 1px solid var(--pop-light);
+    color: var(--pop-dark);
     font-weight: 600;
     font-family: 'Poppins', sans-serif;
-    padding: 1.25rem 1.5rem;
-}
-
-.card-body {
     padding: 1.5rem;
+    border-radius: var(--radius-std) var(--radius-std) 0 0 !important;
 }
 
 /* === BOTONES (Buttons) === */
 .btn {
-    border-radius: 10px;
-    padding: 0.6rem 1.4rem;
-    font-weight: 500;
+    border-radius: 12px;
+    padding: 0.7rem 1.5rem;
+    font-weight: 600;
     border: none;
     transition: all 0.2s;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    letter-spacing: 0.3px;
 }
 
-    .btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 6px rgba(0,0,0,0.08);
-    }
-
-/* Estilos de Botones */
 .btn-primary {
-    background-color: var(--blue-royal);
+    background-color: var(--pop-primary);
     color: white;
+    box-shadow: 0 4px 12px rgba(144, 103, 198, 0.3);
 }
 
     .btn-primary:hover {
-        background-color: var(--blue-royal-hover);
+        background-color: var(--pop-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(36, 32, 56, 0.25);
     }
 
 .btn-secondary {
     background-color: white;
-    color: var(--blue-deep);
-    border: 1px solid var(--blue-soft);
+    color: var(--pop-dark);
+    border: 2px solid var(--pop-silver);
 }
 
     .btn-secondary:hover {
-        background-color: #dbeafe;
-        color: var(--blue-royal);
+        border-color: var(--pop-primary);
+        color: var(--pop-primary);
+        background-color: white;
     }
-
-/* El antiguo amarillo ahora es Azul Cielo */
-.btn-warning {
-    background-color: var(--status-warning);
-    color: white;
-}
-
-    .btn-warning:hover {
-        background-color: #0284c7;
-        color: white;
-    }
-
-.btn-danger {
-    background-color: var(--status-danger);
-    color: white;
-}
-
-.btn-info {
-    background-color: var(--status-info);
-    color: white;
-}
-
-.btn-sm {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.85rem;
-}
-
-/* === TABLAS === */
-.table {
-    margin-bottom: 0;
-    color: var(--text-main);
-}
-
-    .table thead th {
-        background-color: #dbeafe;
-        color: var(--blue-deep);
-        font-weight: 700;
-        text-transform: uppercase;
-        font-size: 0.75rem;
-        border: none;
-        padding: 1rem;
-    }
-
-    .table tbody td {
-        padding: 1rem;
-        vertical-align: middle;
-        border-bottom: 1px solid #eff6ff;
-    }
-
-.table-hover tbody tr:hover {
-    background-color: #eff6ff;
-}
-
-/* === FORMULARIOS === */
-.form-control, .form-select {
-    border-radius: 10px;
-    border: 1px solid #cbd5e1;
-    background-color: white;
-    padding: 0.7rem 1rem;
-}
-
-    .form-control:focus {
-        border-color: var(--blue-royal);
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-        outline: none;
-    }
-
-.form-label {
-    font-weight: 500;
-    margin-bottom: 0.5rem;
-}
 
 /* === UTILIDADES === */
+.text-primary {
+    color: var(--pop-primary) !important;
+}
+
+.bg-primary {
+    background-color: var(--pop-primary) !important;
+}
+
 .text-muted {
-    color: var(--text-muted) !important;
+    color: #888291 !important;
 }
+/* Ajuste visual para el gris */
 
-.fw-bold {
-    font-weight: 600 !important;
-}
-
-.badge {
-    padding: 0.5em 0.8em;
-    border-radius: 6px;
-    font-weight: 500;
-}
-
-.rounded-pill {
-    border-radius: 50rem !important;
-}
-
-.alert {
-    border-radius: var(--radius-std);
-    border: none;
+/* Reemplazo de Bootstrap Colors por Variables CSS */
+:root {
+    --bs-primary: #9067C6; /* Override Bootstrap Primary */
+    --bs-secondary: #8D86C9;
+    --bs-body-bg: #F7F7FF;
 }

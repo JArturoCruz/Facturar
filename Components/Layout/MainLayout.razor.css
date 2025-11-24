@@ -1,42 +1,96 @@
-.page {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    background-color: #eff6ff; /* Azul Hielo */
+﻿@inherits LayoutComponentBase <div class="page"> <header class="top-bar"> <div class="top-bar-content"> <a href="/" class="brand-logo"> <div class="logo-icon">FP</div> <div class="logo-text">Factura<span class="brand-gradient">Pop</span></div> </a> <nav class="nav-links"> <a href="/facturador" class="nav-item"> <i class="bi bi-pencil-square me-1"></i> Facturar </a> <a href="/facturas" class="nav-item"> <i class="bi bi-clock-history me-1"></i> Historial </a> <a href="/dashboard" class="nav-item"> <i class="bi bi-graph-up me-1"></i> Dash </a> <a href="/reportes" class="nav-item"> <i class="bi bi-file-earmark-text me-1"></i> Reportes </a> </nav> </div> </header> <main> <div class="content"> @Body </div> </main> </div> <div id="blazor-error-ui"> Ha ocurrido un error inesperado. <a href="" class="reload">Recargar</a> <span class="dismiss">🗙</span> </div> <style> .top-bar {
+    background-color: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--pop-silver);
+    padding: 0.8rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
-main {
-    flex: 1;
-    padding: 2rem;
-    display: flex;
-    justify-content: center;
-}
-
-.content {
-    width: 100%;
+.top-bar-content {
     max-width: 1200px;
     margin: 0 auto;
+    padding: 0 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-#blazor-error-ui {
-    background: #fff;
-    color: #ef4444;
-    bottom: 0;
-    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.05);
-    display: none;
-    left: 0;
-    padding: 1rem;
-    position: fixed;
-    width: 100%;
-    z-index: 1000;
-    border-top: 2px solid #ef4444;
-    text-align: center;
+.brand-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    text-decoration: none;
 }
 
-    #blazor-error-ui .dismiss {
-        cursor: pointer;
-        position: absolute;
-        right: 1rem;
-        top: 1rem;
+.logo-icon {
+    background: linear-gradient(135deg, var(--pop-dark), var(--pop-primary));
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.2rem;
+    box-shadow: 0 4px 10px rgba(144, 103, 198, 0.3);
+}
+
+.logo-text {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.5rem;
+    color: var(--pop-dark);
+    font-weight: 600;
+    letter-spacing: -0.5px;
+}
+
+.nav-links {
+    display: flex;
+    gap: 0.5rem;
+    background: #f1f1f5; /* Gris muy suave */
+    padding: 0.3rem;
+    border-radius: 14px;
+}
+
+.nav-item {
+    color: var(--pop-dark);
+    font-weight: 500;
+    font-size: 0.9rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 10px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+}
+
+    .nav-item:hover, .nav-item.active {
+        background-color: white;
+        color: var(--pop-primary);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        text-decoration: none;
     }
+
+@@media (max-width: 768px) {
+    .logo-text {
+        display: none;
+    }
+
+    .nav-links {
+        gap: 0;
+    }
+
+    .nav-item {
+        padding: 0.5rem 0.8rem;
+        font-size: 1.2rem;
+    }
+
+        .nav-item span {
+            display: none;
+        }
+    /* Ocultar texto en móvil */
+}
+
+</style >

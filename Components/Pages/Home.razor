@@ -1,31 +1,88 @@
 ﻿@page "/"
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Bienvenido a FacturaPop</PageTitle>
 
-<div class="text-center" style="padding: 4rem 0;">
-    <h1 class="display-4 mb-3" style="font-weight: 800; color: var(--blue-deep);">Factura<span class="bold">Pop</span> </h1>
-    <p class="lead text-muted mb-5">Sistema inteligente de gestión y facturación.</p>
+<div class="hero-section text-center">
+    <div class="mb-4">
+        <span class="badge bg-white text-primary border px-3 py-2 rounded-pill shadow-sm">
+            🚀 Gestión inteligente v2.0
+        </span>
+    </div>
 
-    <div class="d-grid gap-3 col-lg-6 col-md-8 mx-auto">
-        <a href="/facturador" class="btn btn-primary btn-lg shadow-sm">
-            <span class="me-2">📝</span> Ir al Facturador
+    <h1 class="display-3 mb-3 fw-bold text-dark">
+        Facturación <span class="brand-gradient">Pop</span>
+    </h1>
+
+    <p class="lead text-muted mb-5 mx-auto" style="max-width: 600px;">
+        El sistema que transforma tu contabilidad aburrida en una experiencia fluida.
+        Diseñado para emprendedores modernos.
+    </p>
+
+    <div class="d-flex justify-content-center gap-3 mb-5">
+        <a href="/facturador" class="btn btn-primary btn-lg shadow-lg px-5 py-3">
+            <span class="me-2">✨</span> Crear Factura
         </a>
-
-        <div class="row g-2">
-            <div class="col-md-6">
-                <a href="/facturas" class="btn btn-secondary w-100 h-100 d-flex align-items-center justify-content-center">
-                    <span>📂 Ver Historial</span>
-                </a>
-            </div>
-            <div class="col-md-6">
-                <a href="/reportes" class="btn btn-secondary w-100 h-100 d-flex align-items-center justify-content-center">
-                    <span>📈 Reportes</span>
-                </a>
-            </div>
-        </div>
-
-        <a href="/dashboard" class="btn btn-info btn-lg text-white shadow-sm mt-2">
-            <span class="me-2">📊</span> Ver Dashboard de Estadísticas
+        <a href="/dashboard" class="btn btn-secondary btn-lg px-4 py-3">
+            Ver Estadísticas
         </a>
     </div>
+
+    <div class="row g-4 justify-content-center px-4">
+        <div class="col-md-4">
+            <div class="feature-card p-4">
+                <div class="icon-box mb-3">📂</div>
+                <h5>Historial Seguro</h5>
+                <p class="small text-muted mb-3">Tus facturas guardadas y organizadas automáticamente.</p>
+                <a href="/facturas" class="btn btn-link text-decoration-none p-0">Consultar &rarr;</a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card p-4">
+                <div class="icon-box mb-3">📈</div>
+                <h5>Reportes Visuales</h5>
+                <p class="small text-muted mb-3">Entiende tus ingresos con gráficos claros y coloridos.</p>
+                <a href="/reportes" class="btn btn-link text-decoration-none p-0">Analizar &rarr;</a>
+            </div>
+        </div>
+    </div>
 </div>
+
+<style>
+    .hero-section {
+        padding: 4rem 0;
+        background: radial-gradient(circle at top right, #f3e8ff 0%, transparent 40%), radial-gradient(circle at bottom left, #e0e7ff 0%, transparent 40%);
+    }
+
+    .brand-gradient {
+        background: linear-gradient(135deg, var(--pop-dark) 0%, var(--pop-primary) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .feature-card {
+        background: white;
+        border-radius: 20px;
+        border: 1px solid var(--pop-silver);
+        transition: transform 0.3s;
+        height: 100%;
+        text-align: left;
+    }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--pop-primary);
+            box-shadow: 0 10px 30px rgba(144, 103, 198, 0.15);
+        }
+
+    .icon-box {
+        width: 50px;
+        height: 50px;
+        background: var(--pop-light);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: var(--pop-primary);
+    }
+</style>
