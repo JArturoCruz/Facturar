@@ -38,9 +38,7 @@ namespace Facturar.Components.Data
             using var conexion = new SqliteConnection($"Datasource={ruta}");
             await conexion.OpenAsync();
             var comando = conexion.CreateCommand();
-            comando.CommandText = @"
-                INSERT INTO FacturaItem (Identificador, Producto, Cantidad, PrecioUnitario) 
-                VALUES(@IDENTIFICADOR, @PRODUCTO, @CANTIDAD, @PRECIO)";
+            comando.CommandText = @"INSERT INTO FacturaItem (Identificador, Producto, Cantidad, PrecioUnitario) VALUES(@IDENTIFICADOR, @PRODUCTO, @CANTIDAD, @PRECIO)";
             comando.Parameters.AddWithValue("@IDENTIFICADOR", item.Identificador);
             comando.Parameters.AddWithValue("@PRODUCTO", item.Producto);
             comando.Parameters.AddWithValue("@CANTIDAD", item.Cantidad);
@@ -53,12 +51,7 @@ namespace Facturar.Components.Data
             using var conexion = new SqliteConnection($"Datasource={ruta}");
             await conexion.OpenAsync();
             var comando = conexion.CreateCommand();
-            comando.CommandText = @"
-                UPDATE FacturaItem 
-                SET Producto = @PRODUCTO, 
-                    Cantidad = @CANTIDAD, 
-                    PrecioUnitario = @PRECIO
-                WHERE Identificador = @IDENTIFICADOR";
+            comando.CommandText = @"UPDATE FacturaItem SET Producto = @PRODUCTO, Cantidad = @CANTIDAD, PrecioUnitario = @PRECIO WHERE Identificador = @IDENTIFICADOR";
             comando.Parameters.AddWithValue("@PRODUCTO", item.Producto);
             comando.Parameters.AddWithValue("@CANTIDAD", item.Cantidad);
             comando.Parameters.AddWithValue("@PRECIO", item.PrecioUnitario);
@@ -92,10 +85,7 @@ namespace Facturar.Components.Data
             using var conexion = new SqliteConnection($"Datasource={ruta}");
             await conexion.OpenAsync();
             var comando = conexion.CreateCommand();
-            comando.CommandText = @"
-                INSERT OR REPLACE INTO configuracion (clave, valor)
-                VALUES (@CLAVE, @VALOR)
-            ";
+            comando.CommandText = "INSERT OR REPLACE INTO configuracion (clave, valor) VALUES (@CLAVE, @VALOR)";
             comando.Parameters.AddWithValue("@CLAVE", clave);
             comando.Parameters.AddWithValue("@VALOR", valor ?? string.Empty);
             await comando.ExecuteNonQueryAsync();
@@ -106,7 +96,6 @@ namespace Facturar.Components.Data
             using var conexion = new SqliteConnection($"Datasource={ruta}");
             await conexion.OpenAsync();
             using var transaccion = conexion.BeginTransaction();
-
             try
             {
                 var total = itemsDraft.Sum(i => i.Subtotal);
@@ -114,12 +103,8 @@ namespace Facturar.Components.Data
 
                 var cmdFactura = conexion.CreateCommand();
                 cmdFactura.Transaction = transaccion;
-                cmdFactura.CommandText = @"
-                    INSERT INTO Factura (NombreFactura, FechaCreacion, Total, NombreUsuario)
-                    VALUES (@NOMBRE, @FECHA, @TOTAL, @USUARIO);
-                    SELECT last_insert_rowid();
-                ";
-                cmdFactura.Parameters.AddWithValue("@NOMBRE", "TEMP_ID");
+                cmdFactura.CommandText = @"INSERT INTO Factura (NombreFactura, FechaCreacion, Total, NombreUsuario, EsArchivada) VALUES (@NOMBRE, @FECHA, @TOTAL, @USUARIO, 0); SELECT last_insert_rowid();";
+                cmdFactura.Parameters.AddWithValue("@NOMBRE", "TEMP");
                 cmdFactura.Parameters.AddWithValue("@FECHA", fecha);
                 cmdFactura.Parameters.AddWithValue("@TOTAL", total);
                 cmdFactura.Parameters.AddWithValue("@USUARIO", nombreUsuario);
@@ -137,10 +122,7 @@ namespace Facturar.Components.Data
                 {
                     var cmdItem = conexion.CreateCommand();
                     cmdItem.Transaction = transaccion;
-                    cmdItem.CommandText = @"
-                        INSERT INTO FacturaItemHistorico (FacturaID, Producto, Cantidad, PrecioUnitario)
-                        VALUES (@FACTURA_ID, @PRODUCTO, @CANTIDAD, @PRECIO)
-                    ";
+                    cmdItem.CommandText = @"INSERT INTO FacturaItemHistorico (FacturaID, Producto, Cantidad, PrecioUnitario) VALUES (@FACTURA_ID, @PRODUCTO, @CANTIDAD, @PRECIO)";
                     cmdItem.Parameters.AddWithValue("@FACTURA_ID", nuevoFacturaID);
                     cmdItem.Parameters.AddWithValue("@PRODUCTO", item.Producto);
                     cmdItem.Parameters.AddWithValue("@CANTIDAD", item.Cantidad);
@@ -155,11 +137,7 @@ namespace Facturar.Components.Data
 
                 await transaccion.CommitAsync();
             }
-            catch
-            {
-                await transaccion.RollbackAsync();
-                throw;
-            }
+            catch { await transaccion.RollbackAsync(); throw; }
         }
 
         public async Task<List<Factura>> ObtenerFacturasGuardadasAsync()
@@ -168,7 +146,7 @@ namespace Facturar.Components.Data
             using var conexion = new SqliteConnection($"Datasource={ruta}");
             await conexion.OpenAsync();
             var comando = conexion.CreateCommand();
-            comando.CommandText = "SELECT FacturaID, NombreFactura, FechaCreacion, Total, NombreUsuario FROM Factura ORDER BY FechaCreacion DESC";
+            comando.CommandText = "SELECT FacturaID, NombreFactura, FechaCreacion, Total, NombreUsuario FROM Factura WHERE EsArchivada = 0 ORDER BY FechaCreacion DESC";
 
             using var lector = await comando.ExecuteReaderAsync();
             while (await lector.ReadAsync())
@@ -179,11 +157,48 @@ namespace Facturar.Components.Data
                     NombreFactura = lector.GetString(1),
                     FechaCreacion = DateTime.Parse(lector.GetString(2)),
                     Total = lector.GetDecimal(3),
-                    NombreUsuario = lector.GetString(4)
+                    NombreUsuario = lector.GetString(4),
+                    EsArchivada = false
                 });
             }
             return facturas;
         }
+
+        public async Task CambiarEstadoArchivoAsync(int facturaID, bool archivar)
+        {
+            using var conexion = new SqliteConnection($"Datasource={ruta}");
+            await conexion.OpenAsync();
+            var comando = conexion.CreateCommand();
+            comando.CommandText = "UPDATE Factura SET EsArchivada = @ESTADO WHERE FacturaID = @ID";
+            comando.Parameters.AddWithValue("@ESTADO", archivar ? 1 : 0);
+            comando.Parameters.AddWithValue("@ID", facturaID);
+            await comando.ExecuteNonQueryAsync();
+        }
+
+        public async Task<List<Factura>> ObtenerFacturasArchivadasAsync()
+        {
+            var facturas = new List<Factura>();
+            using var conexion = new SqliteConnection($"Datasource={ruta}");
+            await conexion.OpenAsync();
+            var comando = conexion.CreateCommand();
+            comando.CommandText = "SELECT FacturaID, NombreFactura, FechaCreacion, Total, NombreUsuario FROM Factura WHERE EsArchivada = 1 ORDER BY FechaCreacion DESC";
+
+            using var lector = await comando.ExecuteReaderAsync();
+            while (await lector.ReadAsync())
+            {
+                facturas.Add(new Factura
+                {
+                    FacturaID = lector.GetInt32(0),
+                    NombreFactura = lector.GetString(1),
+                    FechaCreacion = DateTime.Parse(lector.GetString(2)),
+                    Total = lector.GetDecimal(3),
+                    NombreUsuario = lector.GetString(4),
+                    EsArchivada = true
+                });
+            }
+            return facturas;
+        }
+
 
         public async Task<Factura> ObtenerDetalleFacturaAsync(int facturaID)
         {
@@ -192,7 +207,7 @@ namespace Facturar.Components.Data
             await conexion.OpenAsync();
 
             var cmdFactura = conexion.CreateCommand();
-            cmdFactura.CommandText = "SELECT FacturaID, NombreFactura, FechaCreacion, Total, NombreUsuario FROM Factura WHERE FacturaID = @ID";
+            cmdFactura.CommandText = "SELECT FacturaID, NombreFactura, FechaCreacion, Total, NombreUsuario, EsArchivada FROM Factura WHERE FacturaID = @ID";
             cmdFactura.Parameters.AddWithValue("@ID", facturaID);
 
             using (var lectorF = await cmdFactura.ExecuteReaderAsync())
@@ -205,7 +220,8 @@ namespace Facturar.Components.Data
                         NombreFactura = lectorF.GetString(1),
                         FechaCreacion = DateTime.Parse(lectorF.GetString(2)),
                         Total = lectorF.GetDecimal(3),
-                        NombreUsuario = lectorF.GetString(4)
+                        NombreUsuario = lectorF.GetString(4),
+                        EsArchivada = lectorF.GetBoolean(5)
                     };
                 }
             }
@@ -268,31 +284,22 @@ namespace Facturar.Components.Data
                 {
                     var cmdInsertar = conexion.CreateCommand();
                     cmdInsertar.Transaction = transaccion;
-                    cmdInsertar.CommandText = @"
-                        INSERT INTO FacturaItem (Identificador, Producto, Cantidad, PrecioUnitario) 
-                        VALUES(@IDENTIFICADOR, @PRODUCTO, @CANTIDAD, @PRECIO)";
-
+                    cmdInsertar.CommandText = @"INSERT INTO FacturaItem (Identificador, Producto, Cantidad, PrecioUnitario) VALUES(@IDENTIFICADOR, @PRODUCTO, @CANTIDAD, @PRECIO)";
                     cmdInsertar.Parameters.AddWithValue("@IDENTIFICADOR", proximoId++);
                     cmdInsertar.Parameters.AddWithValue("@PRODUCTO", item.Producto);
                     cmdInsertar.Parameters.AddWithValue("@CANTIDAD", item.Cantidad);
                     cmdInsertar.Parameters.AddWithValue("@PRECIO", item.PrecioUnitario);
                     await cmdInsertar.ExecuteNonQueryAsync();
                 }
-
                 await transaccion.CommitAsync();
             }
-            catch
-            {
-                await transaccion.RollbackAsync();
-                throw;
-            }
+            catch { await transaccion.RollbackAsync(); throw; }
         }
 
         public async Task ActualizarFacturaCompletaAsync(int facturaID, DateTime fechaFactura, string nombreUsuario, List<FacturaItem> itemsDraft)
         {
             using var conexion = new SqliteConnection($"Datasource={ruta}");
             await conexion.OpenAsync();
-
             using var transaccion = conexion.BeginTransaction();
             try
             {
@@ -301,12 +308,7 @@ namespace Facturar.Components.Data
 
                 var cmdFactura = conexion.CreateCommand();
                 cmdFactura.Transaction = transaccion;
-                cmdFactura.CommandText = @"
-                    UPDATE Factura 
-                    SET FechaCreacion = @FECHA, 
-                        Total = @TOTAL,
-                        NombreUsuario = @USUARIO
-                    WHERE FacturaID = @ID";
+                cmdFactura.CommandText = @"UPDATE Factura SET FechaCreacion = @FECHA, Total = @TOTAL, NombreUsuario = @USUARIO WHERE FacturaID = @ID";
                 cmdFactura.Parameters.AddWithValue("@FECHA", fecha);
                 cmdFactura.Parameters.AddWithValue("@TOTAL", total);
                 cmdFactura.Parameters.AddWithValue("@USUARIO", nombreUsuario);
@@ -323,10 +325,7 @@ namespace Facturar.Components.Data
                 {
                     var cmdItem = conexion.CreateCommand();
                     cmdItem.Transaction = transaccion;
-                    cmdItem.CommandText = @"
-                        INSERT INTO FacturaItemHistorico (FacturaID, Producto, Cantidad, PrecioUnitario)
-                        VALUES (@FACTURA_ID, @PRODUCTO, @CANTIDAD, @PRECIO)
-                    ";
+                    cmdItem.CommandText = @"INSERT INTO FacturaItemHistorico (FacturaID, Producto, Cantidad, PrecioUnitario) VALUES (@FACTURA_ID, @PRODUCTO, @CANTIDAD, @PRECIO)";
                     cmdItem.Parameters.AddWithValue("@FACTURA_ID", facturaID);
                     cmdItem.Parameters.AddWithValue("@PRODUCTO", item.Producto);
                     cmdItem.Parameters.AddWithValue("@CANTIDAD", item.Cantidad);
@@ -341,11 +340,7 @@ namespace Facturar.Components.Data
 
                 await transaccion.CommitAsync();
             }
-            catch
-            {
-                await transaccion.RollbackAsync();
-                throw;
-            }
+            catch { await transaccion.RollbackAsync(); throw; }
         }
 
         public async Task EliminarFacturaGuardadaAsync(int facturaID)
@@ -353,7 +348,6 @@ namespace Facturar.Components.Data
             using var conexion = new SqliteConnection($"Datasource={ruta}");
             await conexion.OpenAsync();
             using var transaccion = conexion.BeginTransaction();
-
             try
             {
                 var cmdItems = conexion.CreateCommand();
@@ -370,11 +364,7 @@ namespace Facturar.Components.Data
 
                 await transaccion.CommitAsync();
             }
-            catch
-            {
-                await transaccion.RollbackAsync();
-                throw;
-            }
+            catch { await transaccion.RollbackAsync(); throw; }
         }
 
         public async Task LimpiarBorradorCompletoAsync()
@@ -395,7 +385,9 @@ namespace Facturar.Components.Data
             comando.CommandText = @"
                 SELECT FacturaID, NombreFactura, FechaCreacion, Total, NombreUsuario
                 FROM Factura 
-                WHERE strftime('%Y', FechaCreacion) = @ANIO AND NombreUsuario = @USUARIO
+                WHERE strftime('%Y', FechaCreacion) = @ANIO 
+                AND NombreUsuario = @USUARIO
+                AND EsArchivada = 0
                 ORDER BY FechaCreacion";
             comando.Parameters.AddWithValue("@ANIO", anio.ToString());
             comando.Parameters.AddWithValue("@USUARIO", nombreUsuario);
@@ -415,159 +407,126 @@ namespace Facturar.Components.Data
             return facturas;
         }
 
-        // === NUEVO MÉTODO PARA EL DASHBOARD ===
         public async Task<DashboardEstadisticas> ObtenerEstadisticasDashboardAsync()
         {
             var stats = new DashboardEstadisticas();
             using var conexion = new SqliteConnection($"Datasource={ruta}");
             await conexion.OpenAsync();
 
-            // 1. Ingresos Totales
+            // 1. Ingresos
             var cmdTotal = conexion.CreateCommand();
-            cmdTotal.CommandText = "SELECT COALESCE(SUM(Total), 0) FROM Factura";
+            cmdTotal.CommandText = "SELECT COALESCE(SUM(Total), 0) FROM Factura WHERE EsArchivada = 0";
             stats.IngresosTotales = Convert.ToDecimal(await cmdTotal.ExecuteScalarAsync());
-            
-            // 2 total facturas 
+
+            // 2. Conteo
             var cmdCount = conexion.CreateCommand();
-            cmdCount.CommandText = "SELECT COUNT(*) FROM Factura";
+            cmdCount.CommandText = "SELECT COUNT(*) FROM Factura WHERE EsArchivada = 0";
             stats.TotalFacturas = Convert.ToInt32(await cmdCount.ExecuteScalarAsync());
 
-            // 3. Ticket Promedio
+            // 3. Ticket
             if (stats.TotalFacturas > 0)
                 stats.TicketPromedio = stats.IngresosTotales / stats.TotalFacturas;
 
-            // 4. Producto más vendido (Cantidad)
+            // 4. Producto más vendido
             var cmdProdQty = conexion.CreateCommand();
             cmdProdQty.CommandText = @"
-                SELECT Producto, SUM(Cantidad) as TotalCant 
-                FROM FacturaItemHistorico 
-                GROUP BY Producto 
+                SELECT h.Producto, SUM(h.Cantidad) as TotalCant 
+                FROM FacturaItemHistorico h
+                JOIN Factura f ON f.FacturaID = h.FacturaID
+                WHERE f.EsArchivada = 0
+                GROUP BY h.Producto 
                 ORDER BY TotalCant DESC LIMIT 1";
             using (var reader = await cmdProdQty.ExecuteReaderAsync())
             {
                 if (await reader.ReadAsync())
-                {
-                    stats.ProductoMasVendido = new ProductoTop
-                    {
-                        Nombre = reader.GetString(0),
-                        Valor = reader.GetDecimal(1)
-                    };
-                }
+                    stats.ProductoMasVendido = new ProductoTop { Nombre = reader.GetString(0), Valor = reader.GetDecimal(1) };
             }
 
-            // 5. Producto con más ingresos
+            // 5. Producto Ingresos
             var cmdProdMoney = conexion.CreateCommand();
             cmdProdMoney.CommandText = @"
-                SELECT Producto, SUM(Cantidad * PrecioUnitario) as TotalDinero
-                FROM FacturaItemHistorico 
-                GROUP BY Producto 
+                SELECT h.Producto, SUM(h.Cantidad * h.PrecioUnitario) as TotalDinero
+                FROM FacturaItemHistorico h
+                JOIN Factura f ON f.FacturaID = h.FacturaID
+                WHERE f.EsArchivada = 0
+                GROUP BY h.Producto 
                 ORDER BY TotalDinero DESC LIMIT 1";
             using (var reader = await cmdProdMoney.ExecuteReaderAsync())
             {
                 if (await reader.ReadAsync())
-                {
-                    stats.ProductoConMasIngresos = new ProductoTop
-                    {
-                        Nombre = reader.GetString(0),
-                        Valor = reader.GetDecimal(1)
-                    };
-                }
+                    stats.ProductoConMasIngresos = new ProductoTop { Nombre = reader.GetString(0), Valor = reader.GetDecimal(1) };
             }
 
-            // 6. Mes más exitoso
+            // 6. Mes
             var cmdMes = conexion.CreateCommand();
             cmdMes.CommandText = @"
                 SELECT strftime('%Y-%m', FechaCreacion) as Mes, SUM(Total) as TotalMes
                 FROM Factura 
+                WHERE EsArchivada = 0
                 GROUP BY Mes 
                 ORDER BY TotalMes DESC LIMIT 1";
             using (var reader = await cmdMes.ExecuteReaderAsync())
             {
                 if (await reader.ReadAsync())
-                {
-                    stats.MesMasExitoso = new MesVenta
-                    {
-                        MesAno = reader.GetString(0),
-                        Total = reader.GetDecimal(1)
-                    };
-                }
+                    stats.MesMasExitoso = new MesVenta { MesAno = reader.GetString(0), Total = reader.GetDecimal(1) };
             }
-            // 7. Usuario que más factura
+
+            // 7. Usuario dinero
             var cmdUserMoney = conexion.CreateCommand();
             cmdUserMoney.CommandText = @"
                 SELECT NombreUsuario, SUM(Total) as TotalDinero
                 FROM Factura 
+                WHERE EsArchivada = 0
                 GROUP BY NombreUsuario 
                 ORDER BY TotalDinero DESC LIMIT 1";
             using (var reader = await cmdUserMoney.ExecuteReaderAsync())
             {
                 if (await reader.ReadAsync())
-                {
-                    stats.UsuarioQueMasFactura = new UsuarioTop
-                    {
-                        Nombre = reader.GetString(0),
-                        Valor = reader.GetDecimal(1)
-                    };
-                }
+                    stats.UsuarioQueMasFactura = new UsuarioTop { Nombre = reader.GetString(0), Valor = reader.GetDecimal(1) };
             }
+
+            // 8. Usuario cantidad
             var cmdUserCount = conexion.CreateCommand();
             cmdUserCount.CommandText = @"
                 SELECT NombreUsuario, COUNT(*) as Conteo
                 FROM Factura 
+                WHERE EsArchivada = 0
                 GROUP BY NombreUsuario 
                 ORDER BY Conteo DESC LIMIT 1";
             using (var reader = await cmdUserCount.ExecuteReaderAsync())
             {
                 if (await reader.ReadAsync())
-                {
-                    stats.UsuarioConMasTransacciones = new UsuarioTop
-                    {
-                        Nombre = reader.GetString(0),
-                        Valor = reader.GetDecimal(1)
-                    };
-                }
+                    stats.UsuarioConMasTransacciones = new UsuarioTop { Nombre = reader.GetString(0), Valor = reader.GetDecimal(1) };
             }
-            // 9 ventas anuales
+
+            // 9. Anual
             var cmdAnual = conexion.CreateCommand();
             cmdAnual.CommandText = @"
                 SELECT strftime('%Y', FechaCreacion) as Anio, SUM(Total) 
                 FROM Factura 
+                WHERE EsArchivada = 0
                 GROUP BY Anio 
                 ORDER BY Anio DESC";
             using (var reader = await cmdAnual.ExecuteReaderAsync())
             {
                 while (await reader.ReadAsync())
-                {
-                    stats.VentasPorAno.Add(new VentaAnual
-                    {
-                        Ano = reader.GetString(0),
-                        Total = reader.GetDecimal(1)
-                    });
-                }
+                    stats.VentasPorAno.Add(new VentaAnual { Ano = reader.GetString(0), Total = reader.GetDecimal(1) });
             }
-            // 10 ultimas 5 facturas
+
+            // 10. Recientes
             var cmdRecientes = conexion.CreateCommand();
             cmdRecientes.CommandText = @"
                 SELECT FacturaID, NombreFactura, FechaCreacion, Total, NombreUsuario 
                 FROM Factura 
+                WHERE EsArchivada = 0
                 ORDER BY FechaCreacion DESC LIMIT 5";
             using (var reader = await cmdRecientes.ExecuteReaderAsync())
             {
                 while (await reader.ReadAsync())
-                {
-                    stats.UltimasFacturas.Add(new Factura
-                    {
-                        FacturaID = reader.GetInt32(0),
-                        NombreFactura = reader.GetString(1),
-                        FechaCreacion = DateTime.Parse(reader.GetString(2)),
-                        Total = reader.GetDecimal(3),
-                        NombreUsuario = reader.GetString(4)
-                    });
-                }
+                    stats.UltimasFacturas.Add(new Factura { FacturaID = reader.GetInt32(0), NombreFactura = reader.GetString(1), FechaCreacion = DateTime.Parse(reader.GetString(2)), Total = reader.GetDecimal(3), NombreUsuario = reader.GetString(4) });
             }
 
             return stats;
         }
-          
     }
 }

@@ -10,6 +10,7 @@ namespace Facturar.Components.Data
         public DateTime FechaCreacion { get; set; }
         public decimal Total { get; set; }
         public string NombreUsuario { get; set; }
+        public bool EsArchivada { get; set; } = false;
         public List<FacturaItem> Items { get; set; } = new List<FacturaItem>();
     }
 }

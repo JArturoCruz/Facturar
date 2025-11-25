@@ -14,10 +14,15 @@
             <h1 class="fw-bold text-primary">Historial de Facturas</h1>
             <p class="text-muted mb-0">Gestiona y consulta tus documentos emitidos.</p>
         </div>
-        <div>
-            <a href="/" class="btn btn-outline-secondary me-2">
-                <i class="bi bi-house"></i> Inicio
+        <div class="d-flex gap-2">
+            <a href="/" class="btn btn-outline-secondary shadow-sm" title="Volver al Inicio">
+                <i class="bi bi-house-door-fill"></i>
             </a>
+
+            <a href="/facturas-archivadas" class="btn btn-outline-secondary shadow-sm" title="Ver Archivadas">
+                <i class="bi bi-archive-fill"></i>
+            </a>
+
             <a href="/facturador" class="btn btn-primary shadow-sm">
                 <i class="bi bi-plus-lg me-1"></i> Nueva Factura
             </a>
@@ -27,19 +32,11 @@
     <div class="row mb-4">
         <div class="col-md-12">
             <div class="search-bar-card p-2 bg-white rounded-pill shadow-sm border d-flex align-items-center">
-                <div class="px-3 text-muted border-end">
-                    <i class="bi bi-search"></i>
-                </div>
-                <input value="@Controlador.FiltroListaFacturas"
-                       @oninput="OnFiltroUsuarioChanged"
-                       class="form-control border-0 bg-transparent shadow-none"
-                       placeholder="Buscar por nombre de cliente..." />
-
+                <div class="px-3 text-muted border-end"><i class="bi bi-search"></i></div>
+                <input value="@Controlador.FiltroListaFacturas" @oninput="OnFiltroUsuarioChanged" class="form-control border-0 bg-transparent shadow-none" placeholder="Buscar por nombre de cliente..." />
                 @if (!string.IsNullOrWhiteSpace(Controlador.FiltroListaFacturas))
                 {
-                    <button class="btn btn-link text-muted pe-3" @onclick="LimpiarFiltro">
-                        <i class="bi bi-x-circle-fill"></i>
-                    </button>
+                    <button class="btn btn-link text-muted pe-3" @onclick="LimpiarFiltro"><i class="bi bi-x-circle-fill"></i></button>
                 }
             </div>
         </div>
@@ -95,6 +92,10 @@
                                             <i class="bi bi-pencil-square text-warning"></i>
                                         </button>
 
+                                        <button class="btn btn-sm btn-light border" @onclick="() => ArchivarFactura(f)" title="Archivar (Ocultar)">
+                                            <i class="bi bi-archive text-secondary"></i>
+                                        </button>
+
                                         <button class="btn btn-sm btn-light border" @onclick="() => EliminarFactura(f)" title="Eliminar">
                                             <i class="bi bi-trash text-danger"></i>
                                         </button>
@@ -129,10 +130,8 @@
             box-shadow: 0 4px 12px rgba(144, 103, 198, 0.15) !important;
         }
 
-    /* Tabla personalizada */
     .table thead th {
         font-weight: 600;
-        letter-spacing: 0.5px;
         background-color: #f8fafc;
         color: var(--pop-dark);
     }
@@ -142,7 +141,7 @@
     }
 
         .invoice-row:hover {
-            background-color: #fcfaff !important; /* Un lila muy muy suave */
+            background-color: #fcfaff !important;
         }
 
         .invoice-row td {
@@ -188,17 +187,9 @@
     {
         get
         {
-            if (todasLasFacturas == null)
-            {
-                return new List<Factura>();
-            }
-            if (string.IsNullOrWhiteSpace(Controlador.FiltroListaFacturas))
-            {
-                return todasLasFacturas;
-            }
-            return todasLasFacturas
-                .Where(f => f.NombreUsuario.Contains(Controlador.FiltroListaFacturas, StringComparison.OrdinalIgnoreCase))
-                .ToList();
+            if (todasLasFacturas == null) return new List<Factura>();
+            if (string.IsNullOrWhiteSpace(Controlador.FiltroListaFacturas)) return todasLasFacturas;
+            return todasLasFacturas.Where(f => f.NombreUsuario.Contains(Controlador.FiltroListaFacturas, StringComparison.OrdinalIgnoreCase)).ToList();
         }
     }
 
@@ -208,47 +199,33 @@
         todasLasFacturas = await Controlador.ObtenerFacturasGuardadasAsync();
     }
 
-    private async Task OnFiltroUsuarioChanged(ChangeEventArgs e)
-    {
-        string nuevoFiltro = e.Value?.ToString() ?? string.Empty;
-        await Controlador.GuardarFiltroListaFacturasAsync(nuevoFiltro);
-    }
-
-    private async Task LimpiarFiltro()
-    {
-        await Controlador.GuardarFiltroListaFacturasAsync(string.Empty);
-        StateHasChanged();
-    }
+    private async Task OnFiltroUsuarioChanged(ChangeEventArgs e) { string nuevoFiltro = e.Value?.ToString() ?? string.Empty; await Controlador.GuardarFiltroListaFacturasAsync(nuevoFiltro); }
+    private async Task LimpiarFiltro() { await Controlador.GuardarFiltroListaFacturasAsync(string.Empty); StateHasChanged(); }
 
     private async Task RecargarFactura(Factura factura)
     {
         var mensaje = $"¿Cargar '{factura.NombreFactura}' al editor? Se perderá el borrador actual no guardado.";
         bool confirmado = await JSRuntime.InvokeAsync<bool>("confirm", mensaje);
-
-        if (confirmado)
-        {
-            Controlador.FacturaIDEnModificacion = factura.FacturaID;
-            Controlador.FechaFacturaEnBorrador = factura.FechaCreacion;
-            Controlador.NombreUsuarioEnBorrador = factura.NombreUsuario;
-
-            await Controlador.GuardarEstadoModificacionAsync();
-            await Controlador.GuardarFechaFacturaEnBorradorAsync();
-            await Controlador.GuardarUsuarioEnBorradorAsync();
-
-            await Controlador.RecargarFacturaEnBorradorAsync(factura.FacturaID);
-            Navigation.NavigateTo("/facturador");
-        }
+        if (confirmado) { Controlador.FacturaIDEnModificacion = factura.FacturaID; Controlador.FechaFacturaEnBorrador = factura.FechaCreacion; Controlador.NombreUsuarioEnBorrador = factura.NombreUsuario; await Controlador.GuardarEstadoModificacionAsync(); await Controlador.GuardarFechaFacturaEnBorradorAsync(); await Controlador.GuardarUsuarioEnBorradorAsync(); await Controlador.RecargarFacturaEnBorradorAsync(factura.FacturaID); Navigation.NavigateTo("/facturador"); }
     }
 
     private async Task EliminarFactura(Factura factura)
     {
-        var mensaje = $"¿Estás seguro de ELIMINAR la factura #{factura.NombreFactura} de {factura.NombreUsuario}?";
+        var mensaje = $"¿Estás seguro de ELIMINAR la factura #{factura.NombreFactura}?";
+        bool confirmado = await JSRuntime.InvokeAsync<bool>("confirm", mensaje);
+        if (confirmado) { await Controlador.EliminarFacturaGuardadaAsync(factura.FacturaID); todasLasFacturas.Remove(factura); StateHasChanged(); }
+    }
+
+    // MÉTODO PARA ARCHIVAR
+    private async Task ArchivarFactura(Factura factura)
+    {
+        var mensaje = $"¿Deseas ARCHIVAR la factura #{factura.NombreFactura}?\n\nDesaparecerá de todas las listas y reportes hasta que la restaures con contraseña.";
         bool confirmado = await JSRuntime.InvokeAsync<bool>("confirm", mensaje);
 
         if (confirmado)
         {
-            await Controlador.EliminarFacturaGuardadaAsync(factura.FacturaID);
-            todasLasFacturas.Remove(factura);
+            await Controlador.ArchivarFacturaAsync(factura.FacturaID);
+            todasLasFacturas.Remove(factura); // La quitamos de la lista visualmente
             StateHasChanged();
         }
     }

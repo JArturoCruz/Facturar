@@ -1,0 +1,184 @@
+﻿@page "/facturas-archivadas"
+@using Facturar.Components.Data
+@using Facturar.Components.Servicio
+@rendermode InteractiveServer
+@inject ControladorFacturacion Controlador
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Baúl de Archivos - FacturaPop</PageTitle>
+
+<div class="container py-5" style="max-width: 900px;">
+
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h2 class="headline-large mb-1" style="color: var(--pop-dark);">Facturas Archivadas</h2>
+            <p class="text-secondary mb-0">Gestión de documentos ocultos</p>
+        </div>
+        <a href="/facturas" class="btn btn-outline-secondary rounded-pill">
+            <i class="bi bi-arrow-left me-2"></i> Volver
+        </a>
+    </div>
+
+    @if (!accesoConcedido)
+    {
+        <div class="card border-0 shadow-sm mx-auto animate-fade-up" style="max-width: 400px; background-color: white;">
+            <div class="card-body p-5 text-center">
+                <div class="mb-4 text-muted opacity-50">
+                    <i class="bi bi-shield-lock-fill" style="font-size: 4rem;"></i>
+                </div>
+                <h4 class="mb-3 fw-bold">Acceso Restringido</h4>
+                <p class="text-muted small mb-4">Introduce la clave de seguridad para ver el contenido archivado.</p>
+
+                <form @onsubmit="VerificarPassword">
+                    <div class="mb-3">
+                        <input type="password" class="form-control text-center bg-light border-0 py-3 fw-bold"
+                               @bind="passwordInput" placeholder="Contraseña..." />
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 py-2 rounded-pill shadow-sm">
+                        Desbloquear
+                    </button>
+                </form>
+
+                @if (errorPass)
+                {
+                    <p class="text-danger mt-3 small fw-bold">Contraseña incorrecta.</p>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="invoice-paper fade-in">
+            @if (listaArchivada == null || !listaArchivada.Any())
+            {
+                <div class="text-center py-5 opacity-50">
+                    <i class="bi bi-archive display-1 mb-3 d-block text-muted"></i>
+                    <p>No hay facturas en el archivo.</p>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning border-0 rounded-4 mb-4 d-flex align-items-center">
+                    <i class="bi bi-info-circle-fill me-3 fs-4"></i>
+                    <div>
+                        <strong>Modo Solo Lectura:</strong> Puedes ver los detalles, pero no editar hasta desarchivar.
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr class="text-muted small text-uppercase">
+                                <th class="ps-4">Folio</th>
+                                <th>Cliente</th>
+                                <th>Fecha</th>
+                                <th class="text-end">Total</th>
+                                <th class="text-end pe-4">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var f in listaArchivada)
+                            {
+                                <tr>
+                                    <td class="ps-4 fw-bold text-muted">#@f.NombreFactura</td>
+                                    <td class="fw-medium">@f.NombreUsuario</td>
+                                    <td class="text-muted">@f.FechaCreacion.ToString("d/MM/yyyy")</td>
+                                    <td class="text-end fw-bold">@f.Total.ToString("C")</td>
+                                    <td class="text-end pe-4">
+                                        <div class="btn-group">
+                                            <a href="/factura/@f.FacturaID" class="btn btn-sm btn-outline-secondary rounded-start-pill ps-3" title="Ver Detalle">
+                                                <i class="bi bi-eye"></i> Ver
+                                            </a>
+                                            <button class="btn btn-sm btn-outline-primary rounded-end-pill pe-3"
+                                                    @onclick="() => Desarchivar(f)" title="Restaurar">
+                                                <i class="bi bi-box-arrow-up me-1"></i> Desarchivar
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .invoice-paper {
+        background: white;
+        padding: 2rem;
+        border-radius: 24px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+    }
+
+    .animate-fade-up {
+        animation: fadeInUp 0.5s ease-out forwards;
+    }
+
+    .fade-in {
+        animation: fadeIn 0.5s ease-out forwards;
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+</style>
+
+@code {
+    private bool accesoConcedido = false;
+    private string passwordInput = "";
+    private bool errorPass = false;
+    private List<Factura> listaArchivada;
+
+    private void VerificarPassword()
+    {
+        if (passwordInput == "desarchivar")
+        {
+            accesoConcedido = true;
+            errorPass = false;
+            CargarArchivadas();
+        }
+        else
+        {
+            errorPass = true;
+            passwordInput = "";
+        }
+    }
+
+    private async void CargarArchivadas()
+    {
+        listaArchivada = await Controlador.ObtenerFacturasArchivadasAsync();
+        StateHasChanged();
+    }
+
+    private async Task Desarchivar(Factura f)
+    {
+        bool confirmado = await JSRuntime.InvokeAsync<bool>("confirm", $"¿Restaurar la factura #{f.NombreFactura}?\n\nVolverá a aparecer en reportes y listas.");
+        if (confirmado)
+        {
+            await Controlador.DesarchivarFacturaAsync(f.FacturaID);
+            CargarArchivadas();
+        }
+    }
+}
