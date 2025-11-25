@@ -1,146 +1,98 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700;800&display=swap');
 
 :root {
-    /* === NUEVA PALETA FACTURAPOP === */
-    --pop-dark: #242038; /* Fondo Oscuro / Texto Principal */
-    --pop-primary: #9067C6; /* Violeta Vibrante (Acción Principal) */
-    --pop-secondary: #8D86C9; /* Lavanda (Acentos / Secundario) */
-    --pop-silver: #CAC4CE; /* Gris Lila (Bordes / Muted) */
-    --pop-light: #F7F7FF; /* Blanco Hielo (Fondo General) */
-    /* Mapeo al sistema existente (para compatibilidad) */
-    --bg-app: var(--pop-light);
-    --bg-card: #ffffff;
-    --text-main: var(--pop-dark);
-    --text-muted: #6b6675; /* Derivado del dark pero con opacidad */
-
-    --blue-deep: var(--pop-dark); /* Reemplaza el azul noche */
-    --blue-royal: var(--pop-primary); /* Reemplaza el azul real */
-    --blue-soft: var(--pop-secondary); /* Reemplaza el azul pastel */
-    /* Estados del Sistema adaptados */
-    --status-success: #10b981;
-    --status-danger: #ef4444;
-    --status-warning: #f59e0b; /* Regresamos a un ámbar que combina mejor con violeta */
-    --status-info: var(--pop-secondary);
+    /* === MATERIAL DESIGN 3 & FACTURAPOP COLORS === */
+    --md-sys-color-primary: #9067C6;
+    --md-sys-color-on-primary: #FFFFFF;
+    --md-sys-color-primary-container: #EADDFF;
+    --md-sys-color-on-primary-container: #21005D;
+    --md-sys-color-secondary: #8D86C9;
+    --md-sys-color-on-secondary: #FFFFFF;
+    --md-sys-color-secondary-container: #E8DEF8;
+    --md-sys-color-on-secondary-container: #1D192B;
+    --md-sys-color-tertiary: #242038;
+    --md-sys-color-on-tertiary: #FFFFFF;
+    /* Variables Branding específicas */
+    --pop-dark: #242038;
+    --pop-primary: #9067C6;
+    --pop-light: #F7F7FF;
+    /* Superficies y Fondos */
+    --md-sys-color-background: #F7F7FF;
+    --md-sys-color-on-background: #1C1B1F;
+    --md-sys-color-surface: #F7F7FF;
+    --md-sys-color-surface-container: #FFFFFF;
     /* Efectos */
-    --radius-std: 16px; /* Bordes más redondeados para estilo "Pop" */
-    --shadow-soft: 0 10px 25px -5px rgba(36, 32, 56, 0.05), 0 8px 10px -6px rgba(36, 32, 56, 0.01);
-    --shadow-pop: 0 10px 30px rgba(144, 103, 198, 0.15); /* Sombra violeta brillante */
+    --md-sys-shape-corner-medium: 12px;
+    --md-sys-elevation-1: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+    --md-sys-elevation-2: 0px 2px 6px 2px rgba(0, 0, 0, 0.15);
 }
 
-/* === RESET Y BASES === */
 body {
-    background-color: var(--bg-app);
-    color: var(--text-main);
-    font-family: 'Inter', sans-serif;
+    background-color: var(--md-sys-color-background);
+    color: var(--md-sys-color-on-background);
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1, h2, h3, h4 {
     font-family: 'Poppins', sans-serif;
     color: var(--pop-dark);
-    font-weight: 700;
-    letter-spacing: -0.5px;
 }
 
-a {
-    color: var(--pop-primary);
-    text-decoration: none;
-    transition: all 0.2s;
-}
-
-    a:hover {
-        color: var(--pop-dark);
-    }
-
-/* === BRANDING FACTURAPOP === */
+/* === CORRECCIÓN DE VISIBILIDAD DE MARCA === */
 .brand-gradient {
-    background: linear-gradient(135deg, var(--pop-dark) 0%, var(--pop-primary) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    font-weight: 800; /* Extra bold para la marca */
+    /* Color sólido de seguridad por si el degradado falla */
+    color: var(--pop-primary);
+    font-weight: 800;
 }
 
-.bg-gradient-pop {
-    background: linear-gradient(135deg, var(--pop-dark) 0%, var(--pop-primary) 100%);
-    color: white;
-}
-
-/* === TARJETAS (Cards) === */
-.card {
-    background-color: var(--bg-card);
-    border: 1px solid rgba(202, 196, 206, 0.4); /* Usando el gris lila */
-    border-radius: var(--radius-std);
-    box-shadow: var(--shadow-soft);
-    transition: all 0.3s ease;
-}
-
-    .card:hover {
-        transform: translateY(-4px);
-        box-shadow: var(--shadow-pop);
-        border-color: var(--pop-secondary);
+/* Solo aplicamos el degradado si el navegador lo soporta bien */
+@supports (-webkit-background-clip: text) {
+    .brand-gradient {
+        background: linear-gradient(135deg, var(--pop-dark) 0%, var(--pop-primary) 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
-
-.card-header {
-    background-color: white;
-    border-bottom: 1px solid var(--pop-light);
-    color: var(--pop-dark);
-    font-weight: 600;
-    font-family: 'Poppins', sans-serif;
-    padding: 1.5rem;
-    border-radius: var(--radius-std) var(--radius-std) 0 0 !important;
 }
 
-/* === BOTONES (Buttons) === */
-.btn {
-    border-radius: 12px;
-    padding: 0.7rem 1.5rem;
-    font-weight: 600;
-    border: none;
+/* === HEADER DE NAVEGACIÓN === */
+.top-navbar {
+    background-color: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    padding: 0.8rem 0;
+}
+
+.nav-link-custom {
+    color: var(--md-sys-color-on-background);
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 50rem;
     transition: all 0.2s;
-    letter-spacing: 0.3px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-.btn-primary {
-    background-color: var(--pop-primary);
-    color: white;
-    box-shadow: 0 4px 12px rgba(144, 103, 198, 0.3);
-}
-
-    .btn-primary:hover {
-        background-color: var(--pop-dark);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 15px rgba(36, 32, 56, 0.25);
+    .nav-link-custom:hover, .nav-link-custom.active {
+        background-color: var(--md-sys-color-secondary-container);
+        color: var(--md-sys-color-on-secondary-container);
     }
 
-.btn-secondary {
-    background-color: white;
-    color: var(--pop-dark);
-    border: 2px solid var(--pop-silver);
+/* Estilos generales reutilizables */
+.card {
+    border: none;
+    border-radius: var(--md-sys-shape-corner-medium);
+    box-shadow: var(--md-sys-elevation-1);
+    background: white;
 }
 
-    .btn-secondary:hover {
-        border-color: var(--pop-primary);
-        color: var(--pop-primary);
-        background-color: white;
-    }
-
-/* === UTILIDADES === */
-.text-primary {
-    color: var(--pop-primary) !important;
-}
-
-.bg-primary {
-    background-color: var(--pop-primary) !important;
-}
-
-.text-muted {
-    color: #888291 !important;
-}
-/* Ajuste visual para el gris */
-
-/* Reemplazo de Bootstrap Colors por Variables CSS */
-:root {
-    --bs-primary: #9067C6; /* Override Bootstrap Primary */
-    --bs-secondary: #8D86C9;
-    --bs-body-bg: #F7F7FF;
+.btn {
+    border-radius: 50rem;
 }

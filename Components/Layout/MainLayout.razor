@@ -1,91 +1,83 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="page">
-    <header class="top-bar">
-        <div class="top-bar-content">
-            <a href="/" class="brand-logo">
-                <span class="icon">🔷</span> Factura<span class="bold">Pop</span>
+<div class="page d-flex flex-column min-vh-100">
+    <nav class="navbar navbar-expand-md navbar-light bg-white border-bottom fixed-top shadow-sm">
+        <div class="container-fluid px-md-5">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+                <div class="rounded-3 d-flex align-items-center justify-content-center text-white brand-icon">
+                    FP
+                </div>
+                <span class="fs-4 fw-bold" style="font-family: 'Poppins', sans-serif; color: var(--pop-dark);">
+                    Factura<span style="color: var(--pop-primary);">Pop</span>
+                </span>
             </a>
 
-            <nav class="nav-links">
-                <a href="/facturador" class="nav-item">Facturar</a>
-                <a href="/facturas" class="nav-item">Historial</a>
-                <a href="/dashboard" class="nav-item">Dashboard</a>
-                <a href="/reportes" class="nav-item">Reportes</a>
-            </nav>
-        </div>
-    </header>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-    <main>
-        <div class="content">
-            @Body
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 gap-md-3">
+                    <li class="nav-item">
+                        <NavLink class="nav-link fw-medium" href="/" Match="NavLinkMatch.All">
+                            Inicio
+                        </NavLink>
+                    </li>
+                    <li class="nav-item">
+                        <NavLink class="nav-link fw-medium" href="/facturas">
+                            Historial
+                        </NavLink>
+                    </li>
+                    <li class="nav-item">
+                        <NavLink class="nav-link fw-medium" href="/reportes">
+                            Reportes
+                        </NavLink>
+                    </li>
+                    <li class="nav-item">
+                        <NavLink class="nav-link fw-medium" href="/dashboard">
+                            Dashboard
+                        </NavLink>
+                    </li>
+                    <li class="nav-item ms-md-2">
+                        <NavLink class="btn btn-primary text-white px-4 rounded-pill" href="/facturador">
+                            Facturar
+                        </NavLink>
+                    </li>
+                </ul>
+            </div>
         </div>
+    </nav>
+
+    <main class="flex-grow-1" style="padding-top: 80px;">
+        @Body
     </main>
+
+    <footer class="text-center py-4 text-muted small mt-auto border-top bg-light">
+        <p class="mb-0">FacturaPop &copy; @DateTime.Now.Year</p>
+    </footer>
 </div>
 
-<div id="blazor-error-ui">
+<div id="blazor-error-ui" class="alert alert-danger fixed-bottom m-0 rounded-0" style="display:none">
     Ha ocurrido un error inesperado.
-    <a href="" class="reload">Recargar</a>
-    <span class="dismiss">🗙</span>
+    <a href="" class="reload fw-bold">Recargar</a>
+    <span class="dismiss float-end cursor-pointer"><i class="bi bi-x"></i></span>
 </div>
 
 <style>
-    .top-bar {
-        background-color: #FFFFFF;
-        border-bottom: 1px solid #e2e8f0;
-        padding: 0.8rem 0;
-        position: sticky;
-        top: 0;
-        z-index: 100;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+    .brand-icon {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, var(--pop-dark), var(--pop-primary));
+        font-weight: bold;
+        font-family: 'Poppins';
     }
 
-    .top-bar-content {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 2rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+    .nav-link {
+        color: var(--pop-dark) !important;
+        transition: color 0.2s;
     }
 
-    .brand-logo {
-        font-family: 'Poppins', sans-serif;
-        font-size: 1.4rem;
-        color: #1e3a8a;
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-        .brand-logo .bold {
-            font-weight: 700;
-            color: #3b82f6;
-        }
-
-        .brand-logo:hover {
-            text-decoration: none;
-            color: #1e3a8a;
-        }
-
-    .nav-links {
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    .nav-item {
-        color: #64748b;
-        font-weight: 500;
-        font-size: 0.95rem;
-        padding: 0.5rem 1rem;
-        border-radius: 8px;
-        transition: all 0.2s;
-    }
-
-        .nav-item:hover {
-            background-color: #eff6ff; /* Azul Hielo */
-            color: #1e3a8a; /* Azul Profundo */
-            text-decoration: none;
+        .nav-link:hover, .nav-link.active {
+            color: var(--pop-primary) !important;
         }
 </style>

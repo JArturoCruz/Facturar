@@ -6,286 +6,206 @@
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
 
-<PageTitle>Facturador - FacturaPop</PageTitle>
+<PageTitle>Facturar - FacturaPop</PageTitle>
 
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<div class="container-fluid px-md-5 py-4" style="max-width: 1400px;">
+
+    <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
-            <h1 class="fw-bold text-primary">
-                @(Controlador.FacturaIDEnModificacion.HasValue ? "Modificar Factura" : "Nueva Factura")
-            </h1>
-            <p class="text-muted mb-0">Agrega productos y genera tu comprobante.</p>
+            <h2 class="headline-large mb-1" style="font-weight: 400; color: var(--pop-dark);">
+                @(Controlador.FacturaIDEnModificacion.HasValue ? "Modificar" : "Crear")
+            </h2>
+            <p class="text-secondary mb-0">FacturaPop &bull; Espacio de trabajo</p>
         </div>
 
-        <div class="btn-group shadow-sm">
-            <a href="/" class="btn btn-outline-secondary" title="Inicio">
-                <i class="bi bi-house"></i>
+        <div class="d-flex gap-2">
+            <a href="/" class="btn btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center" style="width:42px;height:42px;" title="Ir al Inicio">
+                <i class="bi bi-house-door-fill"></i>
             </a>
-            <a href="/facturas" class="btn btn-secondary">
-                <i class="bi bi-folder2-open"></i> Ver Guardadas
-            </a>
-            <button class="btn btn-outline-danger" @onclick="LimpiarFacturador" title="Limpiar todo">
-                <i class="bi bi-eraser"></i> Limpiar
+
+            <button class="btn btn-secondary rounded-pill px-3" @onclick="LimpiarFacturador">
+                <i class="bi bi-arrow-counterclockwise me-2"></i> Reiniciar
             </button>
+
+            <a href="/facturas" class="btn btn-secondary rounded-pill px-3">
+                <i class="bi bi-list-check me-2"></i> Historial
+            </a>
+
+            <a href="/dashboard" class="btn btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center" style="width:42px;height:42px;" title="Dashboard">
+                <i class="bi bi-speedometer2"></i>
+            </a>
         </div>
     </div>
 
-    @if (Controlador != null && Controlador.DraftItem != null)
-    {
-        <div class="card border-0 shadow-sm mb-5" style="background: #f8fafc;">
-            <div class="card-body p-4">
-                <h5 class="card-title text-uppercase text-muted small fw-bold mb-3">
-                    @(Controlador.DraftItem.Identificador == 0 ? "➕ Agregar Item" : "✏️ Editando Item")
-                </h5>
+    <div class="row g-4">
+        <div class="col-lg-4">
+            @if (Controlador != null && Controlador.DraftItem != null)
+            {
+                <div class="card h-100 border-0 shadow-sm" style="background-color: #f8f9fa;">
+                    <div class="card-body p-4">
+                        <h5 class="mb-4 fw-bold" style="color: var(--pop-primary);">
+                            @(Controlador.DraftItem.Identificador == 0 ? "➕ Agregar Concepto" : "✏️ Editar Concepto")
+                        </h5>
 
-                <EditForm Model="Controlador.DraftItem" OnValidSubmit="OnFormSubmit">
-                    <DataAnnotationsValidator />
+                        <EditForm Model="Controlador.DraftItem" OnValidSubmit="OnFormSubmit">
+                            <DataAnnotationsValidator />
 
-                    <div class="row g-3 align-items-end">
-                        <div class="col-md-5">
-                            <label for="producto" class="form-label fw-medium">Descripción del Producto</label>
-                            <InputText id="producto" class="form-control form-control-lg bg-white"
-                                       placeholder="Ej. Consultoría Técnica"
-                                       @bind-Value="Controlador.DraftItem.Producto"
-                                       @bind-Value:after="Controlador.GuardarDraftItemAsync" />
-                            <ValidationMessage For="() => Controlador.DraftItem.Producto" />
-                        </div>
-
-                        <div class="col-md-2">
-                            <label for="cantidad" class="form-label fw-medium">Cant.</label>
-                            <InputNumber id="cantidad" class="form-control form-control-lg bg-white text-center"
-                                         @bind-Value="Controlador.DraftItem.Cantidad"
-                                         @bind-Value:after="Controlador.GuardarDraftItemAsync" />
-                            <ValidationMessage For="() => Controlador.DraftItem.Cantidad" />
-                        </div>
-
-                        <div class="col-md-3">
-                            <label for="precio" class="form-label fw-medium">Precio Unit.</label>
-                            <div class="input-group input-group-lg">
-                                <span class="input-group-text bg-white text-muted">$</span>
-                                <InputNumber id="precio" class="form-control bg-white"
-                                             @bind-Value="Controlador.DraftItem.PrecioUnitario"
-                                             @bind-Value:after="Controlador.GuardarDraftItemAsync" />
+                            <div class="mb-4">
+                                <label for="producto" class="form-label small text-uppercase fw-bold text-muted">Descripción</label>
+                                <InputText id="producto" class="form-control form-control-lg bg-white border-0 shadow-sm"
+                                           placeholder="Ej. Servicios Profesionales"
+                                           @bind-Value="Controlador.DraftItem.Producto"
+                                           @bind-Value:after="Controlador.GuardarDraftItemAsync" />
+                                <ValidationMessage For="() => Controlador.DraftItem.Producto" />
                             </div>
-                            <ValidationMessage For="() => Controlador.DraftItem.PrecioUnitario" />
-                        </div>
 
-                        <div class="col-md-2 d-grid">
-                            @if (Controlador.DraftItem.Identificador == 0)
-                            {
-                                <button type="submit" class="btn btn-primary btn-lg shadow-sm">
-                                    <i class="bi bi-plus-lg"></i> Agregar
-                                </button>
-                            }
-                            else
-                            {
-                                <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-success flex-grow-1">Ok</button>
-                                    <button type="button" class="btn btn-outline-secondary" @onclick="CancelarEdicion">✖</button>
+                            <div class="row g-3 mb-4">
+                                <div class="col-6">
+                                    <label for="cantidad" class="form-label small text-uppercase fw-bold text-muted">Cantidad</label>
+                                    <InputNumber id="cantidad" class="form-control form-control-lg bg-white border-0 shadow-sm text-center"
+                                                 @bind-Value="Controlador.DraftItem.Cantidad"
+                                                 @bind-Value:after="Controlador.GuardarDraftItemAsync" />
                                 </div>
-                            }
+                                <div class="col-6">
+                                    <label for="precio" class="form-label small text-uppercase fw-bold text-muted">Precio</label>
+                                    <div class="input-group shadow-sm">
+                                        <span class="input-group-text bg-white border-0 text-muted">$</span>
+                                        <InputNumber id="precio" class="form-control form-control-lg bg-white border-0 ps-0"
+                                                     @bind-Value="Controlador.DraftItem.PrecioUnitario"
+                                                     @bind-Value:after="Controlador.GuardarDraftItemAsync" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                @if (Controlador.DraftItem.Identificador == 0)
+                                {
+                                    <button type="submit" class="btn btn-primary btn-lg shadow-sm">
+                                        Agregar Item
+                                    </button>
+                                }
+                                else
+                                {
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-primary flex-grow-1">Guardar</button>
+                                        <button type="button" class="btn btn-outline-secondary" @onclick="CancelarEdicion">Cancelar</button>
+                                    </div>
+                                }
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card h-100 border-0 shadow" style="background-color: white;">
+                <div class="card-header bg-white border-bottom-0 pt-4 px-5 d-flex justify-content-between align-items-start">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-3 d-flex align-items-center justify-content-center text-white shadow-sm"
+                             style="width: 48px; height: 48px; background: linear-gradient(135deg, var(--pop-dark), var(--pop-primary)); font-weight: bold; font-family: 'Poppins';">
+                            FP
+                        </div>
+                        <div>
+                            <h4 class="mb-0 fw-bold text-dark" style="font-family: 'Poppins';">Factura<span style="color: var(--pop-primary);">Pop</span></h4>
+                            <small class="text-muted">Borrador Preliminar</small>
                         </div>
                     </div>
-                </EditForm>
-            </div>
-        </div>
-    }
 
-    <div class="invoice-paper-draft fade-in">
-
-        <div class="draft-ribbon">
-            <span>@(Controlador.FacturaIDEnModificacion.HasValue ? "MODO EDICIÓN" : "BORRADOR")</span>
-        </div>
-
-        <div class="row justify-content-between align-items-start mb-5">
-            <div class="col-md-6">
-                <div class="d-flex align-items-center mb-4">
-                    <div class="bg-gradient-pop text-white rounded p-2 me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; font-weight: bold;">FP</div>
-                    <div class="fs-3 fw-bold" style="font-family: 'Poppins', sans-serif; color: var(--pop-dark);">
-                        Factura<span class="brand-gradient">Pop</span>
-                    </div>
-                </div>
-
-                <div class="form-group mb-3">
-                    <label class="text-uppercase text-muted small fw-bold mb-1">Cliente / Razón Social</label>
-                    <div class="input-wrapper">
-                        <i class="bi bi-person text-muted me-2"></i>
-                        <InputText @bind-Value="Controlador.NombreUsuarioEnBorrador"
-                                   @bind-Value:after="Controlador.GuardarUsuarioEnBorradorAsync"
-                                   class="form-control-plaintext form-control-lg fw-bold text-primary"
-                                   placeholder="Ingrese el nombre del cliente..." />
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4 text-md-end">
-                <div class="form-group">
-                    <label class="text-uppercase text-muted small fw-bold mb-1">Fecha de Emisión</label>
-                    <div class="input-wrapper justify-content-md-end">
+                    <div class="text-end">
+                        <label class="form-label d-block text-start small text-muted text-uppercase fw-bold">Fecha de Emisión</label>
                         <InputDate @bind-Value="Controlador.FechaFacturaEnBorrador"
                                    @bind-Value:after="Controlador.GuardarFechaFacturaEnBorradorAsync"
-                                   class="form-control form-control-sm w-auto d-inline-block text-end border-0 bg-light rounded px-2" />
+                                   class="form-control form-control-sm border-0 bg-light fw-bold text-end" style="width: 160px;" />
                     </div>
                 </div>
-                <div class="mt-2 text-muted small">
-                    @if (Controlador.FacturaIDEnModificacion.HasValue)
+
+                <div class="card-body px-5">
+                    <div class="p-4 rounded-4 mb-4" style="background-color: #f3e8ff;">
+                        <label class="small text-uppercase fw-bold mb-1 text-primary opacity-75">Facturar a:</label>
+                        <InputText @bind-Value="Controlador.NombreUsuarioEnBorrador"
+                                   @bind-Value:after="Controlador.GuardarUsuarioEnBorradorAsync"
+                                   class="form-control-plaintext fs-3 fw-bold text-dark"
+                                   placeholder="Nombre del Cliente..." />
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(errorAlGuardar))
                     {
-                        <span class="badge bg-warning text-dark">Editando ID: #@Controlador.FacturaIDEnModificacion</span>
+                        <div class="alert alert-danger rounded-4 d-flex align-items-center mb-3">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i> @errorAlGuardar
+                        </div>
                     }
-                    else
-                    {
-                        <span class="badge bg-light text-secondary border">Nueva Asignación de Folio</span>
-                    }
+
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead class="border-bottom">
+                                <tr class="text-muted small text-uppercase">
+                                    <th class="ps-0 py-3">Concepto</th>
+                                    <th class="text-center py-3">Cant</th>
+                                    <th class="text-end py-3">Precio</th>
+                                    <th class="text-end py-3">Importe</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (itemsFactura.Any())
+                                {
+                                    @foreach (var item in itemsFactura)
+                                    {
+                                        <tr>
+                                            <td class="ps-0 fw-medium text-dark py-3">@item.Producto</td>
+                                            <td class="text-center py-3">
+                                                <span class="badge rounded-pill bg-light text-dark border">@item.Cantidad</span>
+                                            </td>
+                                            <td class="text-end text-muted py-3">@item.PrecioUnitario.ToString("C")</td>
+                                            <td class="text-end fw-bold text-dark py-3">@item.Subtotal.ToString("C")</td>
+                                            <td class="text-end pe-0 py-3">
+                                                <button class="btn btn-link p-0 me-2 text-primary" @onclick="() => PrepararEdicion(item)">
+                                                    <i class="bi bi-pencil-fill"></i>
+                                                </button>
+                                                <button class="btn btn-link p-0 text-danger" @onclick="() => EliminarItemDeFactura(item)">
+                                                    <i class="bi bi-trash-fill"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="5" class="text-center py-5 text-muted opacity-50">
+                                            <i class="bi bi-cart-x fs-1 d-block mb-2"></i>
+                                            Sin conceptos agregados.
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
-        </div>
 
-        @if (!string.IsNullOrWhiteSpace(errorAlGuardar))
-        {
-            <div class="alert alert-danger shadow-sm border-0 mb-4">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i> @errorAlGuardar
-            </div>
-        }
+                <div class="card-footer bg-white border-top-0 pb-5 px-5">
+                    <div class="d-flex justify-content-between align-items-center p-4 rounded-4 shadow-sm"
+                         style="background-color: var(--pop-dark); color: white;">
+                        <div>
+                            <small class="d-block opacity-50 text-uppercase fw-bold">Total a Pagar</small>
+                            <span class="fs-1 fw-bold">@TotalFactura.ToString("C")</span>
+                        </div>
 
-        <div class="table-responsive mb-4" style="min-height: 200px;">
-            <table class="table table-borderless align-middle">
-                <thead class="border-bottom border-2">
-                    <tr class="text-uppercase text-muted small">
-                        <th style="width: 50%">Descripción</th>
-                        <th class="text-center" style="width: 15%">Cant.</th>
-                        <th class="text-end" style="width: 15%">Precio</th>
-                        <th class="text-end" style="width: 15%">Total</th>
-                        <th style="width: 5%"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (itemsFactura.Any())
-                    {
-                        @foreach (var item in itemsFactura)
+                        @if (itemsFactura.Any())
                         {
-                            <tr class="invoice-row-hover">
-                                <td class="fw-medium text-dark">@item.Producto</td>
-                                <td class="text-center bg-light rounded-3 my-1">@item.Cantidad</td>
-                                <td class="text-end text-muted">@item.PrecioUnitario.ToString("C")</td>
-                                <td class="text-end fw-bold">@item.Subtotal.ToString("C")</td>
-                                <td class="text-end">
-                                    <div class="btn-group opacity-50 hover-100">
-                                        <button class="btn btn-link btn-sm p-0 text-primary me-2" @onclick="() => PrepararEdicion(item)" title="Editar">
-                                            <i class="bi bi-pencil-fill"></i>
-                                        </button>
-                                        <button class="btn btn-link btn-sm p-0 text-danger" @onclick="() => EliminarItemDeFactura(item)" title="Eliminar">
-                                            <i class="bi bi-trash-fill"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
+                            <button class="btn btn-lg bg-white text-dark rounded-pill px-4 fw-bold shadow-sm"
+                                    @onclick="GuardarFactura">
+                                <i class="bi bi-check-circle-fill me-2 text-success"></i>
+                                @(Controlador.FacturaIDEnModificacion.HasValue ? "Actualizar" : "Finalizar")
+                            </button>
                         }
-                    }
-                    else
-                    {
-                        <tr>
-                            <td colspan="5" class="text-center py-5 text-muted">
-                                <div class="mb-2" style="font-size: 2rem; opacity: 0.2;">🛒</div>
-                                <p class="mb-0">La lista está vacía.</p>
-                                <small>Agrega productos usando el panel superior.</small>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-
-        <div class="row mt-4 pt-3 border-top">
-            <div class="col-md-6 d-flex align-items-end">
-                @if (itemsFactura.Any())
-                {
-                    <button class="btn btn-lg w-100 @(Controlador.FacturaIDEnModificacion.HasValue ? "btn-warning text-white" : "btn-primary") shadow"
-                            @onclick="GuardarFactura">
-                        <i class="bi bi-check-circle-fill me-2"></i>
-                        @(Controlador.FacturaIDEnModificacion.HasValue ? "Actualizar Factura" : "Finalizar y Guardar")
-                    </button>
-                }
-            </div>
-            <div class="col-md-6">
-                <div class="bg-light p-3 rounded text-end">
-                    <small class="text-uppercase text-muted fw-bold">Total a Pagar</small>
-                    <div class="display-6 fw-bold text-dark">@TotalFactura.ToString("C")</div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<style>
-    /* Estilos Locales de VistaFacturar */
-    .invoice-paper-draft {
-        background: white;
-        padding: 3rem;
-        border-radius: 16px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.06);
-        position: relative;
-        overflow: hidden;
-        border: 1px solid #eef2f6;
-    }
-
-    .draft-ribbon {
-        position: absolute;
-        top: 20px;
-        right: -35px;
-        background: #f1f5f9;
-        color: #94a3b8;
-        transform: rotate(45deg);
-        padding: 5px 40px;
-        font-size: 0.7rem;
-        font-weight: bold;
-        letter-spacing: 1px;
-        pointer-events: none;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-
-    .input-wrapper {
-        display: flex;
-        align-items: center;
-        border-bottom: 2px solid #e2e8f0;
-        transition: border-color 0.3s;
-    }
-
-        .input-wrapper:focus-within {
-            border-color: var(--pop-primary);
-        }
-
-    .form-control-plaintext:focus {
-        outline: none;
-    }
-
-    .invoice-row-hover:hover td {
-        background-color: #f8fafc;
-    }
-
-    .hover-100 {
-        transition: opacity 0.2s;
-    }
-
-    .invoice-row-hover:hover .hover-100 {
-        opacity: 1 !important;
-    }
-
-    .fade-in {
-        animation: fadeIn 0.6s ease-out;
-    }
-
-    @@keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-</style>
 
 @code {
     private List<FacturaItem> itemsFactura = new List<FacturaItem>();
@@ -345,10 +265,8 @@
                     itemsFactura
                 );
             }
-
             itemsFactura = await Controlador.ObtenerItems();
             StateHasChanged();
-
             Navigation.NavigateTo("/facturas");
         }
         catch (Exception ex)
@@ -360,9 +278,7 @@
 
     private async Task LimpiarFacturador()
     {
-        var mensaje = "Se limpiará el borrador actual. Si estás modificando una factura, se cancelará la modificación.\n\n¿Deseas continuar?";
-        bool confirmado = await JSRuntime.InvokeAsync<bool>("confirm", mensaje);
-
+        bool confirmado = await JSRuntime.InvokeAsync<bool>("confirm", "Se limpiará el borrador actual. ¿Deseas continuar?");
         if (confirmado)
         {
             await Controlador.LimpiarEstadoBorradorAsync();
