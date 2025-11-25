@@ -216,7 +216,6 @@
         if (confirmado) { await Controlador.EliminarFacturaGuardadaAsync(factura.FacturaID); todasLasFacturas.Remove(factura); StateHasChanged(); }
     }
 
-    // MÉTODO PARA ARCHIVAR
     private async Task ArchivarFactura(Factura factura)
     {
         var mensaje = $"¿Deseas ARCHIVAR la factura #{factura.NombreFactura}?\n\nDesaparecerá de todas las listas y reportes hasta que la restaures con contraseña.";
@@ -225,7 +224,7 @@
         if (confirmado)
         {
             await Controlador.ArchivarFacturaAsync(factura.FacturaID);
-            todasLasFacturas.Remove(factura); // La quitamos de la lista visualmente
+            todasLasFacturas.Remove(factura);
             StateHasChanged();
         }
     }

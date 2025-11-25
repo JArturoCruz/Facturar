@@ -11,132 +11,169 @@
 <div class="container py-4">
     @if (factura != null)
     {
-        <div class="d-flex justify-content-between align-items-center mb-4 d-print-none">
-            <div>
-                @if (factura.EsArchivada)
-                {
-                    <a href="/facturas-archivadas" class="btn btn-outline-secondary me-2 rounded-pill">
-                        <i class="bi bi-arrow-left"></i> Volver al Archivo
-                    </a>
-                }
-                else
-                {
-                    <a href="/facturas" class="btn btn-outline-secondary me-2 rounded-pill">
-                        <i class="bi bi-arrow-left"></i> Volver al listado
-                    </a>
-                }
-            </div>
-
-            <div class="btn-group shadow-sm rounded-pill">
-                @if (factura.EsArchivada)
-                {
-                    <button class="btn btn-secondary disabled" disabled>
-                        <i class="bi bi-lock-fill"></i> Solo Lectura
-                    </button>
-                    <button class="btn btn-outline-primary" @onclick="() => DesarchivarDesdeDetalle(factura)">
-                        <i class="bi bi-box-arrow-up"></i> Desarchivar
-                    </button>
-                }
-                else
-                {
-                    <button class="btn btn-warning text-white" @onclick="() => RecargarFactura(factura)">
-                        <i class="bi bi-pencil-square"></i> Modificar
-                    </button>
-                    <button class="btn btn-danger" @onclick="() => EliminarFactura(factura)">
-                        <i class="bi bi-trash"></i> Eliminar
-                    </button>
-                }
-                <button class="btn btn-primary" onclick="window.print()">
-                    <i class="bi bi-printer"></i> Imprimir
-                </button>
-            </div>
-        </div>
-
-        @if (factura.EsArchivada)
+        @if (factura.EsArchivada && !Controlador.SesionArchivosDesbloqueada)
         {
-            <div class="alert alert-warning d-print-none rounded-4 mb-4 d-flex align-items-center">
-                <i class="bi bi-archive-fill me-3 fs-4"></i>
-                <div>
-                    <strong>Documento Archivado:</strong> Esta factura está en modo solo lectura. Desarchívala para realizar modificaciones.
+            <div class="d-flex flex-column align-items-center justify-content-center py-5 fade-in-up">
+                <div class="card border-0 shadow-sm p-5 text-center" style="max-width: 450px; background-color: white; border-radius: 24px;">
+                    <div class="mb-4 text-warning opacity-75">
+                        <i class="bi bi-shield-lock-fill" style="font-size: 5rem;"></i>
+                    </div>
+                    <h3 class="fw-bold mb-2">Acceso Directo Bloqueado</h3>
+                    <p class="text-muted mb-4">Esta factura está archivada. Ingresa tu clave para visualizarla.</p>
+
+                    <form @onsubmit="VerificarPassword" class="w-100">
+                        <div class="mb-3">
+                            <input type="password" class="form-control text-center bg-light border-0 py-3 fw-bold rounded-pill"
+                                   @bind="passwordInput" placeholder="Contraseña..." autofocus />
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold shadow-sm">
+                            Desbloquear
+                        </button>
+                    </form>
+
+                    @if (errorPass)
+                    {
+                        <div class="mt-3 text-danger fw-bold small animate-shake">
+                            <i class="bi bi-x-circle me-1"></i> Contraseña incorrecta
+                        </div>
+                    }
+
+                    <div class="mt-4">
+                        <a href="/facturas" class="text-muted small">Volver al inicio</a>
+                    </div>
                 </div>
             </div>
         }
-
-        <div class="invoice-paper fade-in-up">
-
-            <div class="row mb-5 align-items-center">
-                <div class="col-md-7">
-                    <div class="d-flex align-items-center">
-                        <div class="rounded-3 d-flex align-items-center justify-content-center text-white me-3 shadow-sm brand-logo-box">
-                            FP
-                        </div>
-                        <div>
-                            <div class="fs-2 fw-bold lh-1 text-dark" style="font-family: 'Poppins';">
-                                Factura<span style="color: var(--pop-primary);">Pop</span>
-                            </div>
-                            <div class="text-muted small">Folio #@factura.NombreFactura</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-5 text-end">
-                    <h2 class="text-uppercase text-primary mb-1 opacity-50">Factura</h2>
-                    <h4 class="text-dark fw-bold">@factura.Total.ToString("C")</h4>
-                    <div class="mt-2 text-muted">
-                        <small>Emitida el:</small> <strong>@factura.FechaCreacion.ToString("D")</strong>
-                    </div>
-                </div>
-            </div>
-
-            <hr class="my-4 opacity-10" />
-
-            <div class="row mb-5">
-                <div class="col-md-6">
-                    <div class="client-box p-4 rounded-4 bg-light">
-                        <h6 class="text-uppercase text-muted small fw-bold mb-2">Cliente</h6>
-                        <h3 class="mb-0 text-dark fw-bold">@factura.NombreUsuario</h3>
-                    </div>
-                </div>
-            </div>
-
-            <div class="table-responsive mb-4">
-                <table class="table table-borderless align-middle">
-                    <thead class="invoice-thead border-bottom">
-                        <tr class="text-uppercase text-muted small">
-                            <th scope="col" class="ps-3 py-3">Descripción</th>
-                            <th scope="col" class="text-center py-3">Cant.</th>
-                            <th scope="col" class="text-end py-3">Precio</th>
-                            <th scope="col" class="text-end pe-3 py-3">Subtotal</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in factura.Items)
+        else
+        {
+            <div class="fade-in">
+                <div class="d-flex justify-content-between align-items-center mb-4 d-print-none">
+                    <div>
+                        @if (factura.EsArchivada)
                         {
-                            <tr class="invoice-row">
-                                <td class="ps-3 fw-medium py-3">@item.Producto</td>
-                                <td class="text-center py-3">@item.Cantidad</td>
-                                <td class="text-end text-muted py-3">@item.PrecioUnitario.ToString("C")</td>
-                                <td class="text-end fw-bold pe-3 py-3">@item.Subtotal.ToString("C")</td>
-                            </tr>
+                            <a href="/facturas-archivadas" class="btn btn-outline-secondary me-2 rounded-pill">
+                                <i class="bi bi-arrow-left"></i> Volver al Archivo
+                            </a>
                         }
-                    </tbody>
-                </table>
-            </div>
+                        else
+                        {
+                            <a href="/facturas" class="btn btn-outline-secondary me-2 rounded-pill">
+                                <i class="bi bi-arrow-left"></i> Volver al listado
+                            </a>
+                        }
+                    </div>
 
-            <hr class="my-4" />
+                    <div class="btn-group shadow-sm rounded-pill">
+                        @if (factura.EsArchivada)
+                        {
+                            <button class="btn btn-secondary disabled" disabled>
+                                <i class="bi bi-lock-fill"></i> Solo Lectura
+                            </button>
+                            <button class="btn btn-outline-primary" @onclick="() => DesarchivarDesdeDetalle(factura)">
+                                <i class="bi bi-box-arrow-up"></i> Restaurar
+                            </button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-warning text-white" @onclick="() => RecargarFactura(factura)">
+                                <i class="bi bi-pencil-square"></i> Modificar
+                            </button>
+                            <button class="btn btn-danger" @onclick="() => EliminarFactura(factura)">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </button>
+                        }
+                        <button class="btn btn-primary" onclick="window.print()">
+                            <i class="bi bi-printer"></i> Imprimir
+                        </button>
+                    </div>
+                </div>
 
-            <div class="row justify-content-end">
-                <div class="col-md-5 col-lg-4">
-                    <div class="d-flex justify-content-between align-items-center total-row mt-3 p-4 rounded-4 text-white shadow-sm">
-                        <span class="h5 mb-0 opacity-75">TOTAL</span>
-                        <span class="h2 mb-0 fw-bold">@factura.Total.ToString("C")</span>
+                @if (factura.EsArchivada)
+                {
+                    <div class="alert alert-warning d-print-none rounded-4 mb-4 d-flex align-items-center">
+                        <i class="bi bi-unlock-fill me-3 fs-4"></i>
+                        <div>
+                            <strong>Modo Visualización:</strong> Tienes permiso de visualización activo.
+                        </div>
+                    </div>
+                }
+
+                <div class="invoice-paper fade-in-up">
+                    <div class="row mb-5 align-items-center">
+                        <div class="col-md-7">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-3 d-flex align-items-center justify-content-center text-white me-3 shadow-sm brand-logo-box">
+                                    FP
+                                </div>
+                                <div>
+                                    <div class="fs-2 fw-bold lh-1 text-dark" style="font-family: 'Poppins';">
+                                        Factura<span style="color: var(--pop-primary);">Pop</span>
+                                    </div>
+                                    <div class="text-muted small">Folio #@factura.NombreFactura</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-5 text-end">
+                            <h2 class="text-uppercase text-primary mb-1 opacity-50">Factura</h2>
+                            <h4 class="text-dark fw-bold">@factura.Total.ToString("C")</h4>
+                            <div class="mt-2 text-muted">
+                                <small>Emitida el:</small> <strong>@factura.FechaCreacion.ToString("D")</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4 opacity-10" />
+
+                    <div class="row mb-5">
+                        <div class="col-md-6">
+                            <div class="client-box p-4 rounded-4 bg-light">
+                                <h6 class="text-uppercase text-muted small fw-bold mb-2">Cliente</h6>
+                                <h3 class="mb-0 text-dark fw-bold">@factura.NombreUsuario</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive mb-4">
+                        <table class="table table-borderless align-middle">
+                            <thead class="invoice-thead border-bottom">
+                                <tr class="text-uppercase text-muted small">
+                                    <th scope="col" class="ps-3 py-3">Descripción</th>
+                                    <th scope="col" class="text-center py-3">Cant.</th>
+                                    <th scope="col" class="text-end py-3">Precio</th>
+                                    <th scope="col" class="text-end pe-3 py-3">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in factura.Items)
+                                {
+                                    <tr class="invoice-row">
+                                        <td class="ps-3 fw-medium py-3">@item.Producto</td>
+                                        <td class="text-center py-3">@item.Cantidad</td>
+                                        <td class="text-end text-muted py-3">@item.PrecioUnitario.ToString("C")</td>
+                                        <td class="text-end fw-bold pe-3 py-3">@item.Subtotal.ToString("C")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <hr class="my-4" />
+
+                    <div class="row justify-content-end">
+                        <div class="col-md-5 col-lg-4">
+                            <div class="d-flex justify-content-between align-items-center total-row mt-3 p-4 rounded-4 text-white shadow-sm">
+                                <span class="h5 mb-0 opacity-75">TOTAL</span>
+                                <span class="h2 mb-0 fw-bold">@factura.Total.ToString("C")</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-5 pt-4 text-muted border-top border-light opacity-50 small">
+                        <p class="mb-0">Generado por FacturaPop</p>
                     </div>
                 </div>
             </div>
-
-            <div class="text-center mt-5 pt-4 text-muted border-top border-light opacity-50 small">
-                <p class="mb-0">Generado por FacturaPop</p>
-            </div>
-        </div>
+        }
     }
     else if (facturaNoEncontrada)
     {
@@ -176,15 +213,29 @@
         background: var(--pop-dark);
     }
 
-    @@media print {
-        .d-print-none {
-            display: none !important;
+    .animate-shake {
+        animation: shake 0.5s;
+    }
+
+    @@keyframes shake {
+        0% {
+            transform: translateX(0);
         }
 
-        .invoice-paper {
-            box-shadow: none !important;
-            border: none !important;
-            padding: 0 !important;
+        25% {
+            transform: translateX(-5px);
+        }
+
+        50% {
+            transform: translateX(5px);
+        }
+
+        75% {
+            transform: translateX(-5px);
+        }
+
+        100% {
+            transform: translateX(0);
         }
     }
 
@@ -203,21 +254,52 @@
             transform: translateY(0);
         }
     }
+
+    @@media print {
+        .d-print-none {
+            display: none !important;
+        }
+
+        .invoice-paper {
+            box-shadow: none !important;
+            border: none !important;
+            padding: 0 !important;
+        }
+    }
 </style>
 
 @code {
     [Parameter] public int FacturaID { get; set; }
     private Factura factura;
     private bool facturaNoEncontrada = false;
+    private string passwordInput = "";
+    private bool errorPass = false;
 
     protected override async Task OnParametersSetAsync()
     {
         factura = null;
         facturaNoEncontrada = false;
+        passwordInput = "";
+        errorPass = false;
+
         await Task.Delay(100);
         factura = await Controlador.ObtenerDetalleFacturaAsync(FacturaID);
 
         if (factura == null) facturaNoEncontrada = true;
+    }
+
+    private void VerificarPassword()
+    {
+        if (passwordInput == "desarchivar")
+        {
+            Controlador.DesbloquearArchivos();
+            errorPass = false;
+        }
+        else
+        {
+            errorPass = true;
+            passwordInput = "";
+        }
     }
 
     private async Task RecargarFactura(Factura factura)
@@ -249,15 +331,14 @@
         }
     }
 
-    // Método opcional por si quieren desarchivar desde aquí
     private async Task DesarchivarDesdeDetalle(Factura f)
     {
-        bool confirmado = await JSRuntime.InvokeAsync<bool>("confirm", "¿Desarchivar esta factura para editarla?");
+        bool confirmado = await JSRuntime.InvokeAsync<bool>("confirm", "¿Restaurar esta factura al historial general?");
         if (confirmado)
         {
             await Controlador.DesarchivarFacturaAsync(f.FacturaID);
-            // Recargamos los datos para actualizar la vista
             factura = await Controlador.ObtenerDetalleFacturaAsync(FacturaID);
+            Controlador.DesbloquearArchivos(); 
             StateHasChanged();
         }
     }

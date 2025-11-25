@@ -24,9 +24,16 @@ namespace Facturar.Components.Servicio
         public string FiltroListaFacturas { get; set; } = string.Empty;
         private bool haCargadoFiltroLista = false;
 
+        public bool SesionArchivosDesbloqueada { get; set; } = false;
+
         public ControladorFacturacion(ServicioFactura servicioFacturacion)
         {
             _servicioFactura = servicioFacturacion;
+        }
+
+        public void DesbloquearArchivos()
+        {
+            SesionArchivosDesbloqueada = true;
         }
 
         public async Task CargarEstadoBorradorAsync()
@@ -121,7 +128,6 @@ namespace Facturar.Components.Servicio
             NombreUsuarioEnBorrador = "";
             await GuardarUsuarioEnBorradorAsync();
         }
-
         public async Task GuardarFacturaActualAsync(DateTime fechaFactura, string nombreUsuario, List<FacturaItem> itemsDraft)
         {
             if (string.IsNullOrWhiteSpace(nombreUsuario)) throw new Exception("El nombre del usuario es obligatorio.");
@@ -140,7 +146,6 @@ namespace Facturar.Components.Servicio
         public async Task<Factura> ObtenerDetalleFacturaAsync(int facturaID) => await _servicioFactura.ObtenerDetalleFacturaAsync(facturaID);
         public async Task RecargarFacturaEnBorradorAsync(int facturaID) => await _servicioFactura.RecargarFacturaEnBorradorAsync(facturaID);
         public async Task EliminarFacturaGuardadaAsync(int facturaID) => await _servicioFactura.EliminarFacturaGuardadaAsync(facturaID);
-
         public async Task<ReporteAnual> GenerarReporteAnualAsync(int anio, string nombreUsuario)
         {
             if (string.IsNullOrWhiteSpace(nombreUsuario)) throw new Exception("El nombre del usuario es obligatorio.");
